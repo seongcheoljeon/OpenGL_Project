@@ -20,7 +20,11 @@ public:
 private:
     Context() = default;
     bool _Init();
-    ProgramUPtr _m_program;
+    ProgramUPtr _m_program = nullptr;
+
+    uint32_t _m_vertex_array_object = 0;
+    uint32_t _m_vertex_buffer = 0;
+    uint32_t _m_index_buffer = 0;
 };
 
 #endif // OPENGL_PROJECT_CONTEXT_H
