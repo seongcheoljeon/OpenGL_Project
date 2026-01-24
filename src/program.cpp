@@ -24,6 +24,11 @@ Program::~Program()
     }
 }
 
+void Program::Use() const
+{
+    glUseProgram(_program);
+}
+
 bool Program::_Link(const std::vector<ShaderSPtr> &shaders)
 {
     // OpenGL program object 생성

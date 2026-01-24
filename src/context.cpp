@@ -18,7 +18,7 @@ void Context::Render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(_program->Get());
+    _program->Use();
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 }
 
@@ -37,19 +37,12 @@ bool Context::_Init()
     // 순서 중요!
     // VAO binding -> VBO binding -> vertex attribute 설정
 
-    // vertex array object 생성 및 바인딩
-    // VAO는 여러 버퍼 바인딩과 어트리뷰트 설정을 하나로 묶어주는 역할
-    glGenVertexArrays(1, &_vertex_array_object);
-    glBindVertexArray(_vertex_array_object);
+    _vertex_layout = VertexLayout::Create();
 
     // vertex buffer 생성 (position, normal, 등등이 들어가는 버퍼)
     _vertex_buffer = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices, sizeof(float) * 12);
 
-    // 0번 vertex 어트리뷰트 사용
-    glEnableVertexAttribArray(0);
-    // 버퍼에서 어트리뷰트 데이터 읽는 방법 설정
-    // 위치 데이터는 3개의 float로 구성되어 있음. 정규화된 값이 아니고, 각 정점 데이터는 sizeof(float) * 3 간격으로 떨어져 있음
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
+    _vertex_layout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
     // index buffer 생성 및 바인딩
     _index_buffer = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(uint32_t) * 6);

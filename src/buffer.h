@@ -28,7 +28,7 @@ public:
 private:
     Buffer() = default;
 
-    bool Init( uint32_t buffer_type, uint32_t usage, const void* data, size_t data_size );
+    bool _Init( uint32_t buffer_type, uint32_t usage, const void* data, size_t data_size );
 
     uint32_t _buffer{0};
     uint32_t _buffer_type{0};

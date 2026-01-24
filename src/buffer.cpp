@@ -8,7 +8,7 @@
 BufferUPtr Buffer::CreateWithData( uint32_t buffer_type, uint32_t usage, const void* data, size_t data_size )
 {
     auto buffer = BufferUPtr(new Buffer());
-    if (!buffer->Init(buffer_type, usage, data, data_size))
+    if (!buffer->_Init(buffer_type, usage, data, data_size))
     {
         return nullptr;
     }
@@ -28,7 +28,7 @@ void Buffer::Bind() const
     glBindBuffer(_buffer_type, _buffer);
 }
 
-bool Buffer::Init( uint32_t buffer_type, uint32_t usage, const void* data, size_t data_size )
+bool Buffer::_Init( uint32_t buffer_type, uint32_t usage, const void* data, size_t data_size )
 {
     _buffer_type = buffer_type;
     _usage = usage;

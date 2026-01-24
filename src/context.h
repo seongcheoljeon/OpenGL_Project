@@ -9,6 +9,7 @@
 #include "shader.h"
 #include "program.h"
 #include "buffer.h"
+#include "vertex_layout.h"
 
 CLASS_PTR(Context)
 
@@ -24,16 +25,11 @@ private:
 
     bool _Init();
 
-    ProgramUPtr _program = nullptr;
+    ProgramUPtr _program{nullptr};
 
-    uint32_t _vertex_array_object = 0;
-
-    BufferUPtr _vertex_buffer = 0;
-    BufferUPtr _index_buffer  = 0;
-    /*
-    uint32_t _vertex_buffer = 0;
-    uint32_t _index_buffer = 0;
-*/
+    VertexLayoutUPtr _vertex_layout{nullptr};
+    BufferUPtr _vertex_buffer{nullptr};
+    BufferUPtr _index_buffer{nullptr};
 };
 
 #endif // OPENGL_PROJECT_CONTEXT_H

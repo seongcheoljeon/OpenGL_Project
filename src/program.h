@@ -21,6 +21,7 @@ public:
     {
         return _program;
     }
+    void Use() const;
 
 private:
     Program() = default;

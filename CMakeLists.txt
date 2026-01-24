@@ -26,7 +26,10 @@ add_executable(${PROJECT_NAME}
         src/context.cpp
         src/context.h
         src/buffer.h
-        src/buffer.cpp)
+        src/buffer.cpp
+        src/vertex_layout.cpp
+        src/vertex_layout.h
+)
 
 target_sources(${PROJECT_NAME}
         PRIVATE
