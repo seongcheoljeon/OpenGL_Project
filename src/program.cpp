@@ -17,33 +17,33 @@ ProgramUPtr Program::Create(const std::vector<ShaderSPtr> &shaders)
 
 Program::~Program()
 {
-    if (_m_program)
+    if (_program)
     {
-        glDeleteProgram(_m_program);
-        _m_program = 0;
+        glDeleteProgram(_program);
+        _program = 0;
     }
 }
 
 bool Program::_Link(const std::vector<ShaderSPtr> &shaders)
 {
     // OpenGL program object 생성
-    _m_program = glCreateProgram();
+    _program = glCreateProgram();
     for (const ShaderSPtr& shader: shaders)
     {
         // program에 shader 붙이기
-        glAttachShader(_m_program, shader->Get());
+        glAttachShader(_program, shader->Get());
     }
     // program 링크
-    glLinkProgram(_m_program);
+    glLinkProgram(_program);
 
     int success = 0;
     // program에 대한 정수형 정보를 얻어옴
-    glGetProgramiv(_m_program, GL_LINK_STATUS, &success);
+    glGetProgramiv(_program, GL_LINK_STATUS, &success);
     if (!success)
     {
         char info_log[1024];
         // program에 대한 로그를 얻어옴. 링크 에러 얻어내는 용도로 사용
-        glGetProgramInfoLog(_m_program, 1024, nullptr, info_log);
+        glGetProgramInfoLog(_program, 1024, nullptr, info_log);
         SPDLOG_ERROR("failed to link program: {}", info_log);
         return false;
     }

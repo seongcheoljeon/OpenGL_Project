@@ -24,7 +24,9 @@ add_executable(${PROJECT_NAME}
         src/program.cpp
         src/program.h
         src/context.cpp
-        src/context.h)
+        src/context.h
+        src/buffer.h
+        src/buffer.cpp)
 
 target_sources(${PROJECT_NAME}
         PRIVATE

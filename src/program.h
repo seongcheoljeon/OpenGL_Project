@@ -19,13 +19,13 @@ public:
 
     [[nodiscard]] uint32_t Get() const
     {
-        return _m_program;
+        return _program;
     }
 
 private:
     Program() = default;
     bool _Link(const std::vector<ShaderSPtr>& shaders);
-    uint32_t _m_program {0};
+    uint32_t _program {0};
 };
 
 #endif // OPENGL_PROJECT_PROGRAM_H
