@@ -63,6 +63,10 @@ bool Context::_Init()
     }
     SPDLOG_INFO("program id: {}", _program->Get());
 
+    auto loc = glGetUniformLocation(_program->Get(), "color");
+    _program->Use();
+    glUniform4f(loc, 1.0f, 1.0f, 0.0f, 1.0f);
+
     glClearColor(0.0f, 0.1f, 0.2f, 0.0f); // color framebuffer 화면을 클리어
 
     return true;
