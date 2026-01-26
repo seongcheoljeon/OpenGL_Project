@@ -25,8 +25,10 @@ void Context::Render()
 bool Context::_Init()
 {
     float vertices[] = {
-        // first triangle
-        0.5f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, -0.5f, 0.0f, -0.5f, 0.5f, 0.0f,
+        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+        -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f,
     };
 
     uint32_t indices[] = {
@@ -40,9 +42,11 @@ bool Context::_Init()
     _vertex_layout = VertexLayout::Create();
 
     // vertex buffer 생성 (position, normal, 등등이 들어가는 버퍼)
-    _vertex_buffer = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices, sizeof(float) * 12);
+    _vertex_buffer = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices, sizeof(float) * 24);
 
-    _vertex_layout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+    // _vertex_layout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+    _vertex_layout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
+    _vertex_layout->SetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, sizeof(float) * 3);
 
     // index buffer 생성 및 바인딩
     _index_buffer = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(uint32_t) * 6);
@@ -62,10 +66,6 @@ bool Context::_Init()
         return false;
     }
     SPDLOG_INFO("program id: {}", _program->Get());
-
-    auto loc = glGetUniformLocation(_program->Get(), "color");
-    _program->Use();
-    glUniform4f(loc, 1.0f, 1.0f, 0.0f, 1.0f);
 
     glClearColor(0.0f, 0.1f, 0.2f, 0.0f); // color framebuffer 화면을 클리어
 
