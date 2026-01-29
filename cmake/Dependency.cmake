@@ -10,5 +10,6 @@ set(DEP_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/dependencies")
 include(${DEP_CMAKE_DIR}/spdlog.cmake)
 include(${DEP_CMAKE_DIR}/glfw.cmake)
 include(${DEP_CMAKE_DIR}/glad.cmake)
+include(${DEP_CMAKE_DIR}/stb_image.cmake)
 
 message(STATUS "Total Dependencies: ${DEP_LIBS}")

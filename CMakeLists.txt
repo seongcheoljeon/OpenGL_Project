@@ -29,6 +29,8 @@ add_executable(${PROJECT_NAME}
         src/buffer.cpp
         src/vertex_layout.cpp
         src/vertex_layout.h
+        src/image.cpp
+        src/image.h
 )
 
 target_sources(${PROJECT_NAME}
