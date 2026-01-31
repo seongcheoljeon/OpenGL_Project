@@ -10,9 +10,16 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(stb_image)
 
-# stb_image.h를 빌드 디렉토리의 include/stb로 복사
+# stb_image.h를 external/include/stb로 복사
+set(STB_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/external/include/stb")
 file(COPY "${stb_image_SOURCE_DIR}/stb_image.h"
-     DESTINATION "${CMAKE_BINARY_DIR}/include/stb"
+     DESTINATION "${STB_INCLUDE_DIR}"
 )
 
-message(STATUS "Copied stb_image.h to ${CMAKE_BINARY_DIR}/include/stb")
+# include 디렉토리 설정
+target_include_directories(${PROJECT_NAME}
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/external/include"
+)
+
+message(STATUS "Copied stb_image.h to ${STB_INCLUDE_DIR}")

@@ -12,6 +12,21 @@ CLASS_PTR(Image)
 class Image
 {
 public:
+    static ImageUPtr Load(const std::string& filepath);
+    ~Image();
+
+    const uint8_t* GetData() const { return _data; }
+    int GetWidth() const { return _width; }
+    int GetHeight() const { return _height; }
+    int GetChannelCount() const { return _channel_count; }
+
+private:
+    Image() = default;
+    bool _LoadWithStb(const std::string& filepath);
+    int _width = 0;
+    int _height = 0;
+    int _channel_count = 0;
+    uint8_t* _data = nullptr;
 };
 
 #endif //OPENGL_PROJECT_IMAGE_H

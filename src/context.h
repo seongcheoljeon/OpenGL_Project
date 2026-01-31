@@ -30,6 +30,7 @@ private:
     VertexLayoutUPtr _vertex_layout{nullptr};
     BufferUPtr _vertex_buffer{nullptr};
     BufferUPtr _index_buffer{nullptr};
+    uint32_t _texture{0};
 };
 
 #endif // OPENGL_PROJECT_CONTEXT_H
