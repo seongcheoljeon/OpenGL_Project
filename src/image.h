@@ -13,6 +13,7 @@ class Image
 {
 public:
     static ImageUPtr Load(const std::string& filepath);
+    static ImageUPtr Create(int width, int height, int channel_count = 4);
     ~Image();
 
     const uint8_t* GetData() const { return _data; }
@@ -20,9 +21,14 @@ public:
     int GetHeight() const { return _height; }
     int GetChannelCount() const { return _channel_count; }
 
+    void SetCheckImage(int grid_x, int grid_y);
+
 private:
     Image() = default;
     bool _LoadWithStb(const std::string& filepath);
+    bool _Allocate(int width, int height, int channel_count);
+
+private:
     int _width = 0;
     int _height = 0;
     int _channel_count = 0;

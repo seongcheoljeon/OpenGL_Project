@@ -10,6 +10,8 @@
 #include "program.h"
 #include "buffer.h"
 #include "vertex_layout.h"
+#include "texture.h"
+
 
 CLASS_PTR(Context)
 
@@ -30,7 +32,7 @@ private:
     VertexLayoutUPtr _vertex_layout{nullptr};
     BufferUPtr _vertex_buffer{nullptr};
     BufferUPtr _index_buffer{nullptr};
-    uint32_t _texture{0};
+    TextureUPtr _texture{nullptr};
 };
 
 #endif // OPENGL_PROJECT_CONTEXT_H

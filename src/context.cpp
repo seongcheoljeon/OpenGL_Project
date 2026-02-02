@@ -77,28 +77,17 @@ bool Context::_Init()
     glClearColor(0.0f, 0.1f, 0.2f, 0.0f); // color framebuffer 화면을 클리어
 
     /////////////////
-    auto image = Image::Load("../image/container.jpg");
-    if (!image)
-    {
-        return false;
-    }
-    SPDLOG_INFO("image: {}x:{}, {} channels", image->GetWidth(), image->GetHeight(), image->GetChannelCount());
+    // auto image = Image::Load("../image/container.jpg");
+    // if (!image)
+    // {
+    //     return false;
+    // }
+    // SPDLOG_INFO("image: {}x:{}, {} channels", image->GetWidth(), image->GetHeight(), image->GetChannelCount());
 
-    // OpenGL texture object 생성
-    glGenTextures(1, &_texture);
-    // 사용하고자 하는 텍스처 바인딩
-    glBindTexture(GL_TEXTURE_2D, _texture);
-    // 텍스처 필터/래핑 방식 등 파라미터 설정
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    auto image = Image::Create(512, 512);
+    image->SetCheckImage(16, 16);
 
-    // cpu에 있는 이미지 데이터를 gpu 텍스처 메모리로 복사
-    // target: 대상이 될 바인딩 텍스처
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image->GetWidth(), image->GetHeight()
-        , 0, GL_RGB, GL_UNSIGNED_BYTE, image->GetData());
-    /////////////////
+    _texture = Texture::CreateFromImage(image.get());
 
     return true;
 }
