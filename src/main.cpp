@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>
 
-void OnFrameBufferSizeChanged(GLFWwindow *window, int width, int height)
+void OnFrameBufferSizeChanged([[maybe_unused]] GLFWwindow *window, int width, int height)
 {
     SPDLOG_INFO("framebuffer size changed: ({} X {})", width, height);
     glViewport(0, 0, width, height); // opengl이 그림을 그릴 화면의 위치 및 크기 설정

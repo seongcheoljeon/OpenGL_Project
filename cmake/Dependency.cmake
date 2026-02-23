@@ -11,5 +11,6 @@ include(${DEP_CMAKE_DIR}/spdlog.cmake)
 include(${DEP_CMAKE_DIR}/glfw.cmake)
 include(${DEP_CMAKE_DIR}/glad.cmake)
 include(${DEP_CMAKE_DIR}/stb_image.cmake)
+include(${DEP_CMAKE_DIR}/glm.cmake)
 
 message(STATUS "Total Dependencies: ${DEP_LIBS}")
