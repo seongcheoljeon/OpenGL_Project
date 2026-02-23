@@ -11,7 +11,7 @@ ShaderUPtr Shader::CreateFromFile(const std::string &filename, GLenum shader_typ
     {
         return nullptr;
     }
-    return std::move(shader);
+    return shader;
 }
 
 Shader::~Shader()

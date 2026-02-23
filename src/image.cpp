@@ -15,7 +15,7 @@ ImageUPtr Image::Load( const std::string& filepath )
     {
         return nullptr;
     }
-    return std::move(image);
+    return image;
 }
 
 ImageUPtr Image::Create( int width, int height, int channel_count )
@@ -25,7 +25,7 @@ ImageUPtr Image::Create( int width, int height, int channel_count )
     {
         return nullptr;
     }
-    return std::move(image);
+    return image;
 }
 
 Image::~Image()
@@ -59,6 +59,7 @@ void Image::SetCheckImage( int grid_x, int grid_y )
 
 bool Image::_LoadWithStb( const std::string& filepath )
 {
+    stbi_set_flip_vertically_on_load(true);
     _data = stbi_load(filepath.c_str(), &_width, &_height, &_channel_count, 0);
     if (!_data)
     {
@@ -75,5 +76,5 @@ bool Image::_Allocate( int width, int height, int channel_count )
     _channel_count = channel_count;
     _data = (uint8_t*)malloc(_width * _height * _channel_count);
 
-    return _data ? true : false;
+    return _data != nullptr;
 }

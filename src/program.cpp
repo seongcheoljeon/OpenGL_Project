@@ -12,7 +12,7 @@ ProgramUPtr Program::Create(const std::vector<ShaderSPtr> &shaders)
     {
         return nullptr;
     }
-    return std::move(program);
+    return program;
 }
 
 Program::~Program()

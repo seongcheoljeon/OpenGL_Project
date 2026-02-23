@@ -12,7 +12,7 @@ ContextUPtr Context::Create()
     {
         return nullptr;
     }
-    return std::move(context);
+    return context;
 }
 
 void Context::Render()
@@ -77,17 +77,30 @@ bool Context::_Init()
     glClearColor(0.0f, 0.1f, 0.2f, 0.0f); // color framebuffer 화면을 클리어
 
     /////////////////
-    // auto image = Image::Load("../image/container.jpg");
-    // if (!image)
-    // {
-    //     return false;
-    // }
-    // SPDLOG_INFO("image: {}x:{}, {} channels", image->GetWidth(), image->GetHeight(), image->GetChannelCount());
-
-    auto image = Image::Create(512, 512);
-    image->SetCheckImage(16, 16);
+    auto image = Image::Load("../image/container.jpg");
+    if (!image)
+    {
+        return false;
+    }
+    SPDLOG_INFO("image: {}x:{}, {} channels", image->GetWidth(), image->GetHeight(), image->GetChannelCount());
 
     _texture = Texture::CreateFromImage(image.get());
+
+    auto image2 = Image::Load("../image/awesomeface.png");
+    if (!image2)
+    {
+        return false;
+    }
+    _texture2 = Texture::CreateFromImage(image2.get());
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, _texture->Get());
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, _texture2->Get());
+
+    _program->Use();
+    glUniform1i(glGetUniformLocation(_program->Get(), "tex"), 0);
+    glUniform1i(glGetUniformLocation(_program->Get(), "tex2"), 1);
 
     return true;
 }

@@ -33,6 +33,7 @@ private:
     BufferUPtr _vertex_buffer{nullptr};
     BufferUPtr _index_buffer{nullptr};
     TextureUPtr _texture{nullptr};
+    TextureUPtr _texture2{nullptr};
 };
 
 #endif // OPENGL_PROJECT_CONTEXT_H

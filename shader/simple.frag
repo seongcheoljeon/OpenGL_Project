@@ -7,9 +7,10 @@ in vec4 vertex_color; // 정점 셰이더에서 전달된 색상
 in vec2 texcoord;     // 정점 셰이더에서 전달된 텍스처 좌표
 
 uniform sampler2D tex;
+uniform sampler2D tex2;
 
 
 void main()
 {
-    frag_color = texture(tex, texcoord);
+    frag_color = texture(tex, texcoord) * 0.8 + texture(tex2, texcoord) * 0.2;
 }

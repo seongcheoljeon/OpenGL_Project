@@ -15,7 +15,7 @@ public:
     static TextureUPtr CreateFromImage(const Image* image);
     ~Texture();
 
-    const uint32_t Get() const { return _texture; }
+    uint32_t Get() const { return _texture; }
     void Bind() const;
     void SetFilter(uint32_t min_filter, uint32_t mag_filter) const;
     void SetWrap(uint32_t s_wrap, uint32_t t_wrap) const;

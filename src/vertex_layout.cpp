@@ -9,7 +9,7 @@ VertexLayoutUPtr VertexLayout::Create()
 {
     auto vertex_layout = VertexLayoutUPtr(new VertexLayout());
     vertex_layout->_Init();
-    return std::move(vertex_layout);
+    return vertex_layout;
 }
 
 VertexLayout::~VertexLayout()

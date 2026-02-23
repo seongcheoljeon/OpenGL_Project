@@ -10,7 +10,7 @@ TextureUPtr Texture::CreateFromImage( const Image* image )
     auto texture = TextureUPtr(new Texture());
     texture->_CreateTexture();
     texture->_SetTextureFromImage(image);
-    return std::move(texture);
+    return texture;
 }
 
 Texture::~Texture()
@@ -42,7 +42,7 @@ void Texture::_CreateTexture()
 {
     glGenTextures(1, &_texture);
     Bind();
-    SetFilter(GL_LINEAR, GL_LINEAR);
+    SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
     SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 }
 
@@ -66,4 +66,6 @@ void Texture::_SetTextureFromImage( const Image* image )
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->GetWidth(), image->GetHeight()
         , 0, format, GL_UNSIGNED_BYTE, image->GetData());
+
+    glGenerateMipmap(GL_TEXTURE_2D);
 }

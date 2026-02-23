@@ -12,7 +12,7 @@ BufferUPtr Buffer::CreateWithData( uint32_t buffer_type, uint32_t usage, const v
     {
         return nullptr;
     }
-    return std::move(buffer);
+    return buffer;
 }
 
 Buffer::~Buffer()
