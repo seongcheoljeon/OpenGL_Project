@@ -1,4 +1,4 @@
-# OpenGL Study Project
+# OpenGL Project
 
 OpenGL 렌더링 기법을 단계적으로 학습하고 구현하는 C++ 프로젝트입니다.  
 Texture Mapping부터 시작하여 Normal Mapping, Shadow Mapping, Deferred Shading, SSAO, PBR, IBL, BVH 등 렌더링 핵심 기법들을 점진적으로 확장할 예정입니다.
