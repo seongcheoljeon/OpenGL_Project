@@ -58,7 +58,7 @@ bool Context::_Init()
     _index_buffer = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW
         , indices, sizeof(uint32_t) * 6);
 
-    ShaderSPtr vertex_shader   = Shader::CreateFromFile("../shader/simple.vert", GL_VERTEX_SHADER);
+    ShaderSPtr vertex_shader   = Shader::CreateFromFile("../shader/texture.vert", GL_VERTEX_SHADER);
     ShaderSPtr fragment_shader = Shader::CreateFromFile("../shader/simple.frag", GL_FRAGMENT_SHADER);
     if (!vertex_shader || !fragment_shader)
     {
@@ -102,18 +102,12 @@ bool Context::_Init()
     glUniform1i(glGetUniformLocation(_program->Get(), "tex"), 0);
     glUniform1i(glGetUniformLocation(_program->Get(), "tex2"), 1);
 
-
-    //////////
-    /// pos
-    glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
-    auto trans = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 0.0f));
-    auto rot = glm::rotate(glm::mat4(1.0f)
-        , glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    auto scale = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f));
-    vec = trans * rot * scale * vec;
-    SPDLOG_INFO("transformed vec: [{}, {}, {}]", vec.x, vec.y, vec.z);
-    //////////
-
+    // 0.5배 축소 후 z축으로 90도 회전하는 행렬
+    auto transform = glm::rotate(
+        glm::scale(glm::mat4(1.0f), glm::vec3(0.5f)),
+        glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    auto transform_loc = glGetUniformLocation(_program->Get(), "transform");
+    glUniformMatrix4fv(transform_loc, 1, GL_FALSE, glm::value_ptr(transform));
 
     return true;
 }
