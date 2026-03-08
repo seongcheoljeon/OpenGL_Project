@@ -29,6 +29,18 @@ void Program::Use() const
     glUseProgram(_program);
 }
 
+void Program::SetUniform( const std::string& name, int value ) const
+{
+    auto loc = glGetUniformLocation(_program, name.c_str());
+    glUniform1i(loc, value);
+}
+
+void Program::SetUniform( const std::string& name, const glm::mat4& value ) const
+{
+    auto loc = glGetUniformLocation(_program, name.c_str());
+    glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(value));
+}
+
 bool Program::_Link(const std::vector<ShaderSPtr> &shaders)
 {
     // OpenGL program object 생성

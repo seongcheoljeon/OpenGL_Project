@@ -17,9 +17,17 @@ ContextUPtr Context::Create()
 
 void Context::Render()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
 
     _program->Use();
+
+    auto model = glm::rotate(glm::mat4(1.0f), glm::radians((float)glfwGetTime() * 120.0f), glm::vec3(1.0f, 0.f, 0.f));
+    auto view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, -3.f));
+    auto projection = glm::perspective(glm::radians(45.f), (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT, 0.01f, 10.f);
+    auto transform = projection * view * model;
+    _program->SetUniform("transform", transform);
+
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 }
 
@@ -99,15 +107,14 @@ bool Context::_Init()
     glBindTexture(GL_TEXTURE_2D, _texture2->Get());
 
     _program->Use();
-    glUniform1i(glGetUniformLocation(_program->Get(), "tex"), 0);
-    glUniform1i(glGetUniformLocation(_program->Get(), "tex2"), 1);
+    _program->SetUniform("tex", 0);
+    _program->SetUniform("tex2", 1);
 
-    // 0.5배 축소 후 z축으로 90도 회전하는 행렬
-    auto transform = glm::rotate(
-        glm::scale(glm::mat4(1.0f), glm::vec3(0.5f)),
-        glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    auto transform_loc = glGetUniformLocation(_program->Get(), "transform");
-    glUniformMatrix4fv(transform_loc, 1, GL_FALSE, glm::value_ptr(transform));
+    auto model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.f), glm::vec3(1.0f, 0.f, 0.f));
+    auto view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, -3.f));
+    auto projection = glm::perspective(glm::radians(45.f), (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT, 0.01f, 10.f);
+    auto transform = projection * view * model;
+    _program->SetUniform("transform", transform);
 
     return true;
 }
