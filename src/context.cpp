@@ -34,9 +34,16 @@ void Context::Render()
     glEnable(GL_DEPTH_TEST);
 
     auto projection = glm::perspective(glm::radians(45.0f)
-        , (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.01f, 20.f);
-    auto view = glm::translate(glm::mat4(1.0f)
-        , glm::vec3(0.0f, 0.0f, -3.0f));
+        , (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.01f, 100.f);
+
+    float angle = glfwGetTime() * glm::pi<float>() * 0.5f;
+    auto x = sinf(angle) * 10.f;
+    auto z = cosf(angle) * 10.f;
+    auto camera_pos = glm::vec3(x, 0.0f, z);
+    auto camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
+    auto camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    auto view = glm::lookAt(camera_pos, camera_target, camera_up);
 
     for (size_t i=0; i<cube_positions.size(); ++i)
     {
