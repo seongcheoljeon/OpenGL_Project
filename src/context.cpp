@@ -33,17 +33,17 @@ void Context::Render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
+    _camera_front =
+        glm::rotate(glm::mat4(1.0f), glm::radians(_camera_yaw), glm::vec3(0.0f, 1.0f, 0.0f))
+        * glm::rotate(glm::mat4(1.0f), glm::radians(_camera_pitch), glm::vec3(1.0f, 0.0f, 0.0f))
+        * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f); // 방향 vector일 경우 w값에 0.0을 입력해야 하는 필요가 있을 수 있다.
+
     auto projection = glm::perspective(glm::radians(45.0f)
-        , (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.01f, 100.f);
+        , static_cast<float>(_width) / static_cast<float>(_height), 0.01f, 100.f);
 
-    float angle = glfwGetTime() * glm::pi<float>() * 0.5f;
-    auto x = sinf(angle) * 10.f;
-    auto z = cosf(angle) * 10.f;
-    auto camera_pos = glm::vec3(x, 0.0f, z);
-    auto camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
-    auto camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
-
-    auto view = glm::lookAt(camera_pos, camera_target, camera_up);
+    auto view = glm::lookAt(_camera_pos
+        , _camera_pos + _camera_front
+        , _camera_up);
 
     for (size_t i=0; i<cube_positions.size(); ++i)
     {
@@ -58,6 +58,89 @@ void Context::Render()
     }
 
     _program->Use();
+}
+
+void Context::ProcessInput( GLFWwindow* window )
+{
+    if (false == _is_camera_control)
+    {
+        return;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        _camera_pos += _camera_speed * _camera_front;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        _camera_pos -= _camera_speed * _camera_front;
+    }
+
+    auto camera_right = glm::normalize(glm::cross(_camera_up, -_camera_front));
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        _camera_pos += _camera_speed * camera_right;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        _camera_pos -= _camera_speed * camera_right;
+    }
+
+    auto camera_up = glm::normalize(glm::cross(-_camera_front, camera_right));
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        _camera_pos += _camera_speed * camera_up;
+    }
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        _camera_pos -= _camera_speed * camera_up;
+    }
+}
+
+void Context::Reshape( int width, int height )
+{
+    _width = width;
+    _height = height;
+    glViewport(0, 0, _width, _height); // opengl이 그림을 그릴 화면의 위치 및 크기 설정
+}
+
+void Context::MouseMove( double x, double y )
+{
+    if (false == _is_camera_control)
+    {
+        return;
+    }
+    auto pos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
+    auto delta_pos = pos - _prev_mouse_pos;
+
+    const float camera_rot_speed = 0.1f;
+
+    _camera_yaw -= delta_pos.x * camera_rot_speed;
+    _camera_pitch -= delta_pos.y * camera_rot_speed;
+
+    if (_camera_yaw < 0.0f) _camera_yaw += 360.0f;
+    if (_camera_yaw > 360.0f) _camera_yaw -= 360.0f;
+
+    if (_camera_pitch > 89.0f) _camera_pitch = 89.0f;
+    if (_camera_pitch < -89.0f) _camera_pitch = -89.0f;
+
+    _prev_mouse_pos = pos;
+}
+
+void Context::MouseButton( int button, int action, double x, double y )
+{
+    if (GLFW_MOUSE_BUTTON_RIGHT == button)
+    {
+        if (GLFW_PRESS == action)
+        {
+            _prev_mouse_pos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
+            _is_camera_control = true;
+        }
+        else if (GLFW_RELEASE == action)
+        {
+            _is_camera_control = false;
+        }
+    }
 }
 
 bool Context::_Init()
@@ -165,12 +248,6 @@ bool Context::_Init()
     _program->Use();
     _program->SetUniform("tex", 0);
     _program->SetUniform("tex2", 1);
-
-    auto model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.f), glm::vec3(1.0f, 0.f, 0.f));
-    auto view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, -3.f));
-    auto projection = glm::perspective(glm::radians(45.f), (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT, 0.01f, 10.f);
-    auto transform = projection * view * model;
-    _program->SetUniform("transform", transform);
 
     return true;
 }

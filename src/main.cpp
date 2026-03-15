@@ -4,19 +4,23 @@
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>
 
-void OnFrameBufferSizeChanged([[maybe_unused]] GLFWwindow *window, int width, int height)
+void OnFrameBufferSizeChanged( [[maybe_unused]] GLFWwindow* window, int width, int height )
 {
     SPDLOG_INFO("framebuffer size changed: ({} X {})", width, height);
-    glViewport(0, 0, width, height); // opengl이 그림을 그릴 화면의 위치 및 크기 설정
+    auto context = static_cast<Context*>(glfwGetWindowUserPointer(window));
+    if (context)
+    {
+        context->Reshape(width, height);
+    }
 }
 
-void OnKeyEvent(GLFWwindow *window, int key, int scancode, int action, int mods)
+void OnKeyEvent( GLFWwindow* window, int key, int scancode, int action, int mods )
 {
     SPDLOG_INFO("key: {}, scancode: {}, action: {}, mods: {}{}{}", key, scancode,
-                action == GLFW_PRESS     ? "Pressed"
+                action == GLFW_PRESS ? "Pressed"
                 : action == GLFW_RELEASE ? "Released"
-                : action == GLFW_REPEAT  ? "Repeat"
-                                         : "Unknown",
+                : action == GLFW_REPEAT ? "Repeat"
+                : "Unknown",
                 mods & GLFW_MOD_CONTROL ? "Ctrl" : "-", mods & GLFW_MOD_SHIFT ? "Shift" : "-",
                 mods & GLFW_MOD_ALT ? "Alt" : "-");
 
@@ -26,6 +30,24 @@ void OnKeyEvent(GLFWwindow *window, int key, int scancode, int action, int mods)
     }
 }
 
+void OnCursorPos( GLFWwindow* window, double x, double y )
+{
+    auto context = static_cast<Context*>(glfwGetWindowUserPointer(window));
+    if (context)
+    {
+        context->MouseMove(x, y);
+    }
+}
+
+void OnMouseButton( GLFWwindow* window, int button, int action, int modifier )
+{
+    auto context = static_cast<Context*>(glfwGetWindowUserPointer(window));
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    context->MouseButton(button, action, x, y);
+}
+
+
 int main()
 {
     SPDLOG_INFO("Start Program!");
@@ -34,7 +56,7 @@ int main()
     SPDLOG_INFO("Initialize glfw");
     if (!glfwInit())
     {
-        const char *description = nullptr;
+        const char* description = nullptr;
         glfwGetError(&description);
         SPDLOG_ERROR("failed to initialize glfw: {}", description);
         return -1;
@@ -46,7 +68,7 @@ int main()
 
     // glfw 윈도우 생성, 실패하면 에러 출력 후 종료.
     SPDLOG_INFO("Create GLFW window");
-    auto *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_NAME, nullptr, nullptr);
+    auto* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_NAME, nullptr, nullptr);
     if (!window)
     {
         SPDLOG_ERROR("failed to create glfw window");
@@ -83,16 +105,23 @@ int main()
         glfwTerminate();
         return -1;
     }
+
+    glfwSetWindowUserPointer(window, context.get());
     //
 
     OnFrameBufferSizeChanged(window, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, OnFrameBufferSizeChanged);
+
     glfwSetKeyCallback(window, OnKeyEvent);
+    glfwSetCursorPosCallback(window, OnCursorPos);
+    glfwSetMouseButtonCallback(window, OnMouseButton);
 
     // glfw 로프 실행, 윈도우 close 버튼을 누르면 정상 종료.
     SPDLOG_INFO("Start main loop");
     while (!glfwWindowShouldClose(window))
     {
+        glfwPollEvents(); // 이벤트 처리
+        context->ProcessInput(window);
         context->Render();
         /*
          * 화면에 그림을 그리는 과정
@@ -104,7 +133,6 @@ int main()
          * 이것을 더블 버퍼링(Double Buffering)이라고 부름
          */
         glfwSwapBuffers(window);
-        glfwPollEvents();                     // 이벤트 처리
     }
     context.reset();
 
