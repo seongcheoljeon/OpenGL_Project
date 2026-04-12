@@ -4,6 +4,7 @@
 
 #include "context.h"
 #include "image.h"
+#include "imgui.h"
 
 ContextUPtr Context::Create()
 {
@@ -17,6 +18,12 @@ ContextUPtr Context::Create()
 
 void Context::Render()
 {
+    if (ImGui::Begin("my first ImGui window"))
+    {
+        ImGui::Text("This is first text...");
+    }
+    ImGui::End();
+
     std::vector<glm::vec3> cube_positions = {
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(2.0f, 5.0f, -15.0f),

@@ -3,6 +3,9 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 
 void OnFrameBufferSizeChanged( [[maybe_unused]] GLFWwindow* window, int width, int height )
 {
@@ -41,6 +44,8 @@ void OnCursorPos( GLFWwindow* window, double x, double y )
 
 void OnMouseButton( GLFWwindow* window, int button, int action, int modifier )
 {
+    ImGui_ImplGlfw_MouseButtonCallback(window, button, action, modifier);
+
     auto context = static_cast<Context*>(glfwGetWindowUserPointer(window));
     double x, y;
     glfwGetCursorPos(window, &x, &y);
@@ -97,6 +102,13 @@ int main()
         SPDLOG_WARN("glGetString(GL_VERSION) returned null");
     }
 
+    // imgui
+    auto imgui_context = ImGui::CreateContext();
+    ImGui::SetCurrentContext(imgui_context);
+    ImGui_ImplGlfw_InitForOpenGL(window, false);
+    ImGui_ImplOpenGL3_Init();
+    ImGui_ImplOpenGL3_CreateDeviceObjects();
+
     //
     ContextUPtr context = Context::Create();
     if (!context)
@@ -121,8 +133,16 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents(); // 이벤트 처리
+
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
         context->ProcessInput(window);
         context->Render();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         /*
          * 화면에 그림을 그리는 과정
          * ...프레임 버퍼 2개를 준비 (front / back)
@@ -135,6 +155,11 @@ int main()
         glfwSwapBuffers(window);
     }
     context.reset();
+
+    ImGui_ImplOpenGL3_DestroyDeviceObjects();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwTerminate();
 
