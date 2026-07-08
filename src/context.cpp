@@ -18,23 +18,31 @@ ContextUPtr Context::Create()
 
 void Context::Render()
 {
-    if (ImGui::Begin("my first ImGui window"))
+    if (ImGui::Begin("UI Window"))
     {
-        ImGui::Text("This is first text...");
+        if (ImGui::ColorEdit4("Clear Color", glm::value_ptr(_clear_color)))
+        {
+            glClearColor(_clear_color.x, _clear_color.y, _clear_color.z, _clear_color.w);
+        }
+        ImGui::Separator();
+        ImGui::DragFloat3("Camera Position", glm::value_ptr(_camera_pos), 0.01f);
+        ImGui::DragFloat("Camera Yaw", &_camera_yaw, 0.5f);
+        ImGui::DragFloat("Camera Pitch", &_camera_pitch, 0.5f, -89.0f, 89.0f);
+        ImGui::Separator();
+        if (ImGui::Button("Reset Camera"))
+        {
+            _camera_yaw = 0.0f;
+            _camera_pitch = 0.0f;
+            _camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
+        }
     }
     ImGui::End();
 
     std::vector<glm::vec3> cube_positions = {
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(2.0f, 5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f, 3.0f, -7.5f),
-        glm::vec3(1.3f, -2.0f, -2.5f),
-        glm::vec3(1.5f, 2.0f, -2.5f),
-        glm::vec3(1.5f, 0.2f, -1.5f),
-        glm::vec3(-1.3f, 1.0f, -1.5f)
+        glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(2.0f, 5.0f, -15.0f), glm::vec3(-1.5f, -2.2f, -2.5f)
+        , glm::vec3(-3.8f, -2.0f, -12.3f), glm::vec3(2.4f, -0.4f, -3.5f), glm::vec3(-1.7f, 3.0f, -7.5f)
+        , glm::vec3(1.3f, -2.0f, -2.5f), glm::vec3(1.5f, 2.0f, -2.5f), glm::vec3(1.5f, 0.2f, -1.5f)
+        , glm::vec3(-1.3f, 1.0f, -1.5f)
     };
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -46,19 +54,19 @@ void Context::Render()
         * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f); // 방향 vector일 경우 w값에 0.0을 입력해야 하는 필요가 있을 수 있다.
 
     auto projection = glm::perspective(glm::radians(45.0f)
-        , static_cast<float>(_width) / static_cast<float>(_height), 0.01f, 100.f);
+                                       , static_cast<float>(_width) / static_cast<float>(_height), 0.01f, 100.f);
 
     auto view = glm::lookAt(_camera_pos
-        , _camera_pos + _camera_front
-        , _camera_up);
+                            , _camera_pos + _camera_front
+                            , _camera_up);
 
-    for (size_t i=0; i<cube_positions.size(); ++i)
+    for (size_t i = 0; i < cube_positions.size(); ++i)
     {
-        auto& pos = cube_positions[i];
+        auto& pos  = cube_positions[i];
         auto model = glm::translate(glm::mat4(1.0f), pos);
-        model = glm::rotate(model
-            , glm::radians((float)glfwGetTime() * 120.0f + 20.0f  * (float)i)
-            , glm::vec3(1.0f, 0.5f, 0.0f));
+        model      = glm::rotate(model
+                                 , glm::radians((float)glfwGetTime() * 120.0f + 20.0f * (float)i)
+                                 , glm::vec3(1.0f, 0.5f, 0.0f));
         auto transform = projection * view * model;
         _program->SetUniform("transform", transform);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
@@ -106,7 +114,7 @@ void Context::ProcessInput( GLFWwindow* window )
 
 void Context::Reshape( int width, int height )
 {
-    _width = width;
+    _width  = width;
     _height = height;
     glViewport(0, 0, _width, _height); // opengl이 그림을 그릴 화면의 위치 및 크기 설정
 }
@@ -117,19 +125,23 @@ void Context::MouseMove( double x, double y )
     {
         return;
     }
-    auto pos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
+    auto pos       = glm::vec2(static_cast<float>(x), static_cast<float>(y));
     auto delta_pos = pos - _prev_mouse_pos;
 
     const float camera_rot_speed = 0.1f;
 
-    _camera_yaw -= delta_pos.x * camera_rot_speed;
+    _camera_yaw   -= delta_pos.x * camera_rot_speed;
     _camera_pitch -= delta_pos.y * camera_rot_speed;
 
-    if (_camera_yaw < 0.0f) _camera_yaw += 360.0f;
-    if (_camera_yaw > 360.0f) _camera_yaw -= 360.0f;
+    if (_camera_yaw < 0.0f)
+        _camera_yaw += 360.0f;
+    if (_camera_yaw > 360.0f)
+        _camera_yaw -= 360.0f;
 
-    if (_camera_pitch > 89.0f) _camera_pitch = 89.0f;
-    if (_camera_pitch < -89.0f) _camera_pitch = -89.0f;
+    if (_camera_pitch > 89.0f)
+        _camera_pitch = 89.0f;
+    if (_camera_pitch < -89.0f)
+        _camera_pitch = -89.0f;
 
     _prev_mouse_pos = pos;
 }
@@ -140,7 +152,7 @@ void Context::MouseButton( int button, int action, double x, double y )
     {
         if (GLFW_PRESS == action)
         {
-            _prev_mouse_pos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
+            _prev_mouse_pos    = glm::vec2(static_cast<float>(x), static_cast<float>(y));
             _is_camera_control = true;
         }
         else if (GLFW_RELEASE == action)
@@ -155,12 +167,12 @@ bool Context::_Init()
     float vertices[] = {
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f
         , 0.5f, -0.5f, -0.5f, 1.0f, 0.0f
-        , 0.5f,  0.5f, -0.5f, 1.0f, 1.0f
+        , 0.5f, 0.5f, -0.5f, 1.0f, 1.0f
         , -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
 
         , -0.5f, -0.5f, 0.5f, 0.0f, 0.0f
         , 0.5f, -0.5f, 0.5f, 1.0f, 0.0f
-        , 0.5f , 0.5f, 0.5f, 1.0f, 1.0f
+        , 0.5f, 0.5f, 0.5f, 1.0f, 1.0f
         , -0.5f, 0.5f, 0.5f, 0.0f, 1.0f
 
         , -0.5f, 0.5f, 0.5f, 1.0f, 0.0f
@@ -200,17 +212,17 @@ bool Context::_Init()
 
     // vertex buffer 생성 (position, normal, 등등이 들어가는 버퍼)
     _vertex_buffer = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW
-        , vertices, sizeof(float) * 120);
+                                            , vertices, sizeof(float) * 120);
 
     // _vertex_layout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
     _vertex_layout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE
-        , sizeof(float) * 5, 0);
+                              , sizeof(float) * 5, 0);
     _vertex_layout->SetAttrib(2, 2, GL_FLOAT, GL_FALSE
-        , sizeof(float) * 5, sizeof(float) * 3);
+                              , sizeof(float) * 5, sizeof(float) * 3);
 
     // index buffer 생성 및 바인딩
     _index_buffer = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW
-        , indices, sizeof(uint32_t) * 36);
+                                           , indices, sizeof(uint32_t) * 36);
 
     ShaderSPtr vertex_shader   = Shader::CreateFromFile("../shader/texture.vert", GL_VERTEX_SHADER);
     ShaderSPtr fragment_shader = Shader::CreateFromFile("../shader/simple.frag", GL_FRAGMENT_SHADER);

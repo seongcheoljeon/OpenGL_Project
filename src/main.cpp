@@ -19,6 +19,7 @@ void OnFrameBufferSizeChanged( [[maybe_unused]] GLFWwindow* window, int width, i
 
 void OnKeyEvent( GLFWwindow* window, int key, int scancode, int action, int mods )
 {
+    ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
     SPDLOG_INFO("key: {}, scancode: {}, action: {}, mods: {}{}{}", key, scancode,
                 action == GLFW_PRESS ? "Pressed"
                 : action == GLFW_RELEASE ? "Released"
@@ -50,6 +51,16 @@ void OnMouseButton( GLFWwindow* window, int button, int action, int modifier )
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     context->MouseButton(button, action, x, y);
+}
+
+void OnCharEvent( GLFWwindow* window, unsigned int ch )
+{
+    ImGui_ImplGlfw_CharCallback(window, ch);
+}
+
+void OnScroll( GLFWwindow* window, double xoffset, double yoffset )
+{
+    ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
 }
 
 
@@ -125,8 +136,10 @@ int main()
     glfwSetFramebufferSizeCallback(window, OnFrameBufferSizeChanged);
 
     glfwSetKeyCallback(window, OnKeyEvent);
+    glfwSetCharCallback(window, OnCharEvent);
     glfwSetCursorPosCallback(window, OnCursorPos);
     glfwSetMouseButtonCallback(window, OnMouseButton);
+    glfwSetScrollCallback(window, OnScroll);
 
     // glfw 로프 실행, 윈도우 close 버튼을 누르면 정상 종료.
     SPDLOG_INFO("Start main loop");

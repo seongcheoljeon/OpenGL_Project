@@ -26,8 +26,9 @@ public:
 
     void Reshape( int width, int height );
 
-    void MouseMove(double x, double y);
-    void MouseButton(int button, int action, double x, double y);
+    void MouseMove( double x, double y );
+
+    void MouseButton( int button, int action, double x, double y );
 
 private:
     Context() = default;
@@ -42,6 +43,9 @@ private:
     BufferUPtr _index_buffer{nullptr};
     TextureUPtr _texture{nullptr};
     TextureUPtr _texture2{nullptr};
+
+    // clear color
+    glm::vec4 _clear_color{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
 
 private:
     int _width{WINDOW_HEIGHT};
