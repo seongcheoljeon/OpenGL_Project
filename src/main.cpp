@@ -81,20 +81,11 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // 주 모니터 배율을 조회해 창 크기를 비율에 맞게 확대
-    float xscale = 1.0f;
-    float yscale = 1.0f;
-    if (auto* monitor = glfwGetPrimaryMonitor())
-    {
-        glfwGetMonitorContentScale(monitor, &xscale, &yscale);
-    }
+    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); // 창이 뜨는 모니터 배율에 맞춰 창 크기 자동 조절
 
     // glfw 윈도우 생성, 실패하면 에러 출력 후 종료.
     SPDLOG_INFO("Create GLFW window");
-    auto* window = glfwCreateWindow(static_cast<int>(WINDOW_WIDTH * xscale)
-                                    , static_cast<int>(WINDOW_HEIGHT * yscale)
-                                    , WINDOW_NAME, nullptr, nullptr);
+    auto* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_NAME, nullptr, nullptr);
     if (!window)
     {
         SPDLOG_ERROR("failed to create glfw window");
@@ -127,7 +118,9 @@ int main()
     auto imgui_context = ImGui::CreateContext();
     ImGui::SetCurrentContext(imgui_context);
 
-    // 모니터 배율에 맞춰 UI 스케일 적용 (실제 창이 놓인 모니터 기준으로 갱신)
+    // 모니터 배율에 맞춰 UI 스케일 적용 (실제 창이 놓인 모니터 기준)
+    float xscale = 1.0f;
+    float yscale = 1.0f;
     glfwGetWindowContentScale(window, &xscale, &yscale);
     auto& io = ImGui::GetIO();
     io.Fonts->AddFontFromFileTTF(
