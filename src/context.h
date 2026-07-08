@@ -48,7 +48,7 @@ private:
     glm::vec4 _clear_color{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
 
 private:
-    int _width{WINDOW_HEIGHT};
+    int _width{WINDOW_WIDTH};
     int _height{WINDOW_HEIGHT};
 
     // camera parameter
@@ -62,6 +62,12 @@ private:
     float _camera_pitch{0.0f};
     float _camera_yaw{0.0f};
     bool _is_camera_control{false};
+
+    // light parameter
+private:
+    glm::vec3 _light_color{glm::vec3(1.0f, 1.0f, 1.0f)};
+    glm::vec3 _object_color{glm::vec3(1.0f, 0.5f, 0.0f)};
+    float _ambient_strength{0.1f};
 };
 
 #endif // OPENGL_PROJECT_CONTEXT_H

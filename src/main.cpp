@@ -82,9 +82,19 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    // 주 모니터 배율을 조회해 창 크기를 비율에 맞게 확대
+    float xscale = 1.0f;
+    float yscale = 1.0f;
+    if (auto* monitor = glfwGetPrimaryMonitor())
+    {
+        glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+    }
+
     // glfw 윈도우 생성, 실패하면 에러 출력 후 종료.
     SPDLOG_INFO("Create GLFW window");
-    auto* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_NAME, nullptr, nullptr);
+    auto* window = glfwCreateWindow(static_cast<int>(WINDOW_WIDTH * xscale)
+                                    , static_cast<int>(WINDOW_HEIGHT * yscale)
+                                    , WINDOW_NAME, nullptr, nullptr);
     if (!window)
     {
         SPDLOG_ERROR("failed to create glfw window");
@@ -116,6 +126,17 @@ int main()
     // imgui
     auto imgui_context = ImGui::CreateContext();
     ImGui::SetCurrentContext(imgui_context);
+
+    // 모니터 배율에 맞춰 UI 스케일 적용 (실제 창이 놓인 모니터 기준으로 갱신)
+    glfwGetWindowContentScale(window, &xscale, &yscale);
+    auto& io = ImGui::GetIO();
+    io.Fonts->AddFontFromFileTTF(
+        "../fonts/NanumSquareNeo-Variable.ttf"
+        , 16.0f * xscale
+        , nullptr
+        , io.Fonts->GetGlyphRangesKorean());
+    ImGui::GetStyle().ScaleAllSizes(xscale);
+
     ImGui_ImplGlfw_InitForOpenGL(window, false);
     ImGui_ImplOpenGL3_Init();
     ImGui_ImplOpenGL3_CreateDeviceObjects();
@@ -132,7 +153,10 @@ int main()
     glfwSetWindowUserPointer(window, context.get());
     //
 
-    OnFrameBufferSizeChanged(window, WINDOW_WIDTH, WINDOW_HEIGHT);
+    int fb_width = 0;
+    int fb_height = 0;
+    glfwGetFramebufferSize(window, &fb_width, &fb_height);
+    OnFrameBufferSizeChanged(window, fb_width, fb_height);
     glfwSetFramebufferSizeCallback(window, OnFrameBufferSizeChanged);
 
     glfwSetKeyCallback(window, OnKeyEvent);

@@ -31,12 +31,23 @@ void Context::Render()
         ImGui::Separator();
         if (ImGui::Button("Reset Camera"))
         {
-            _camera_yaw = 0.0f;
+            _camera_yaw   = 0.0f;
             _camera_pitch = 0.0f;
-            _camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
+            _camera_pos   = glm::vec3(0.0f, 0.0f, 3.0f);
+        }
+        if (ImGui::CollapsingHeader("Light"))
+        {
+            ImGui::ColorEdit3("Light Color", glm::value_ptr(_light_color));
+            ImGui::ColorEdit3("Object Color", glm::value_ptr(_object_color));
+            ImGui::SliderFloat("Ambient Strength", &_ambient_strength, 0.0f, 1.0f);
         }
     }
     ImGui::End();
+
+    _program->Use();
+    _program->SetUniform("light_color", _light_color);
+    _program->SetUniform("object_color", _object_color);
+    _program->SetUniform("ambient_strength", _ambient_strength);
 
     std::vector<glm::vec3> cube_positions = {
         glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(2.0f, 5.0f, -15.0f), glm::vec3(-1.5f, -2.2f, -2.5f)
@@ -65,8 +76,8 @@ void Context::Render()
         auto& pos  = cube_positions[i];
         auto model = glm::translate(glm::mat4(1.0f), pos);
         model      = glm::rotate(model
-                                 , glm::radians((float)glfwGetTime() * 120.0f + 20.0f * (float)i)
-                                 , glm::vec3(1.0f, 0.5f, 0.0f));
+                            , glm::radians((float)glfwGetTime() * 120.0f + 20.0f * (float)i)
+                            , glm::vec3(1.0f, 0.5f, 0.0f));
         auto transform = projection * view * model;
         _program->SetUniform("transform", transform);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
@@ -224,8 +235,8 @@ bool Context::_Init()
     _index_buffer = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW
                                            , indices, sizeof(uint32_t) * 36);
 
-    ShaderSPtr vertex_shader   = Shader::CreateFromFile("../shader/texture.vert", GL_VERTEX_SHADER);
-    ShaderSPtr fragment_shader = Shader::CreateFromFile("../shader/simple.frag", GL_FRAGMENT_SHADER);
+    ShaderSPtr vertex_shader   = Shader::CreateFromFile("../shader/lighting.vert", GL_VERTEX_SHADER);
+    ShaderSPtr fragment_shader = Shader::CreateFromFile("../shader/lighting.frag", GL_FRAGMENT_SHADER);
     if (!vertex_shader || !fragment_shader)
     {
         return false;
