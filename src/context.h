@@ -65,9 +65,28 @@ private:
 
     // light parameter
 private:
-    glm::vec3 _light_color{glm::vec3(1.0f, 1.0f, 1.0f)};
-    glm::vec3 _object_color{glm::vec3(1.0f, 0.5f, 0.0f)};
-    float _ambient_strength{0.1f};
+    struct Light
+    {
+        glm::vec3 position{glm::vec3(3.0f, 3.0f, 3.0f)};
+        glm::vec3 ambient{glm::vec3(0.1f, 0.1f, 0.1f)};
+        glm::vec3 diffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
+        glm::vec3 specular{glm::vec3(1.0f, 1.0f, 1.0f)};
+    };
+    Light _light;
+
+    // material parameter
+private:
+    struct Material
+    {
+        glm::vec3 ambient{glm::vec3(1.0f, 0.5f, 0.3f)};
+        glm::vec3 diffuse{glm::vec3(1.0f, 0.5f, 0.3f)};
+        glm::vec3 specular{glm::vec3(0.5f, 0.5f, 0.5f)};
+        float shininess{32.0f};
+    };
+    Material _material;
+
+private:
+    bool _is_animation{true};
 };
 
 #endif // OPENGL_PROJECT_CONTEXT_H

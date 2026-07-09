@@ -13,8 +13,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 ##### 윈도우 설정 #####
 set(WINDOW_NAME "SeongcheolJeon's OpenGL")
-set(WINDOW_WIDTH 960)
-set(WINDOW_HEIGHT 540)
+set(WINDOW_WIDTH 1280)
+set(WINDOW_HEIGHT 720)
 
 add_executable(${PROJECT_NAME}
         src/common.h

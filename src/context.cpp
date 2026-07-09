@@ -35,19 +35,26 @@ void Context::Render()
             _camera_pitch = 0.0f;
             _camera_pos   = glm::vec3(0.0f, 0.0f, 3.0f);
         }
-        if (ImGui::CollapsingHeader("Light"))
+
+        if (ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            ImGui::ColorEdit3("Light Color", glm::value_ptr(_light_color));
-            ImGui::ColorEdit3("Object Color", glm::value_ptr(_object_color));
-            ImGui::SliderFloat("Ambient Strength", &_ambient_strength, 0.0f, 1.0f);
+            ImGui::DragFloat3("l.position", glm::value_ptr(_light.position), 0.01f);
+            ImGui::ColorEdit3("l.ambient", glm::value_ptr(_light.ambient));
+            ImGui::ColorEdit3("l.diffuse", glm::value_ptr(_light.diffuse));
+            ImGui::ColorEdit3("l.specular", glm::value_ptr(_light.specular));
         }
+
+        if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::ColorEdit3("m.ambient", glm::value_ptr(_material.ambient));
+            ImGui::ColorEdit3("m.diffuse", glm::value_ptr(_material.diffuse));
+            ImGui::ColorEdit3("m.specular", glm::value_ptr(_material.specular));
+            ImGui::DragFloat("m.shininess", &_material.shininess, 1.0f, 1.0f, 256.0f);
+        }
+
+        ImGui::Checkbox("Animation", &_is_animation);
     }
     ImGui::End();
-
-    _program->Use();
-    _program->SetUniform("light_color", _light_color);
-    _program->SetUniform("object_color", _object_color);
-    _program->SetUniform("ambient_strength", _ambient_strength);
 
     std::vector<glm::vec3> cube_positions = {
         glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(2.0f, 5.0f, -15.0f), glm::vec3(-1.5f, -2.2f, -2.5f)
@@ -71,15 +78,41 @@ void Context::Render()
                             , _camera_pos + _camera_front
                             , _camera_up);
 
+    auto light_model_transform = glm::translate(glm::mat4(1.0), _light.position)
+                                 * glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
+    _program->Use();
+    _program->SetUniform("light.position", _light.position);
+    _program->SetUniform("light.ambient", _light.diffuse);
+    _program->SetUniform("material.ambient", _light.diffuse);
+    _program->SetUniform("transform", projection * view * light_model_transform);
+    _program->SetUniform("model_transform", light_model_transform);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    _program->Use();
+    _program->SetUniform("view_pos", _camera_pos);
+    _program->SetUniform("light.position", _light.position);
+    _program->SetUniform("light.ambient", _light.ambient);
+    _program->SetUniform("light.diffuse", _light.diffuse);
+    _program->SetUniform("light.specular", _light.specular);
+    _program->SetUniform("material.ambient", _material.ambient);
+    _program->SetUniform("material.diffuse", _material.diffuse);
+    _program->SetUniform("material.specular", _material.specular);
+    _program->SetUniform("material.shininess", _material.shininess);
+
     for (size_t i = 0; i < cube_positions.size(); ++i)
     {
         auto& pos  = cube_positions[i];
         auto model = glm::translate(glm::mat4(1.0f), pos);
         model      = glm::rotate(model
-                            , glm::radians((float)glfwGetTime() * 120.0f + 20.0f * (float)i)
+                            , glm::radians(
+                                (_is_animation ? static_cast<float>(glfwGetTime()) : 0.0f) * 120.0f + 20.0f
+                                * static_cast<float>(i))
                             , glm::vec3(1.0f, 0.5f, 0.0f));
         auto transform = projection * view * model;
+
         _program->SetUniform("transform", transform);
+        _program->SetUniform("model_transform", model);
+
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     }
 
@@ -175,36 +208,37 @@ void Context::MouseButton( int button, int action, double x, double y )
 
 bool Context::_Init()
 {
+    // pos.xyz, normal.xyz, texcoord.uv
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f
-        , 0.5f, -0.5f, -0.5f, 1.0f, 0.0f
-        , 0.5f, 0.5f, -0.5f, 1.0f, 1.0f
-        , -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f
+        , 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f
+        , 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f
+        , -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f
 
-        , -0.5f, -0.5f, 0.5f, 0.0f, 0.0f
-        , 0.5f, -0.5f, 0.5f, 1.0f, 0.0f
-        , 0.5f, 0.5f, 0.5f, 1.0f, 1.0f
-        , -0.5f, 0.5f, 0.5f, 0.0f, 1.0f
+        , -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f
+        , 0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f
+        , 0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f
+        , -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f
 
-        , -0.5f, 0.5f, 0.5f, 1.0f, 0.0f
-        , -0.5f, 0.5f, -0.5f, 1.0f, 1.0f
-        , -0.5f, -0.5f, -0.5f, 0.0f, 1.0f
-        , -0.5f, -0.5f, 0.5f, 0.0f, 0.0f
+        , -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f
+        , -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f
+        , -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f
+        , -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f
 
-        , 0.5f, 0.5f, 0.5f, 1.0f, 0.0f
-        , 0.5f, 0.5f, -0.5f, 1.0f, 1.0f
-        , 0.5f, -0.5f, -0.5f, 0.0f, 1.0f
-        , 0.5f, -0.5f, 0.5f, 0.0f, 0.0f
+        , 0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f
+        , 0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f
+        , 0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f
+        , 0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f
 
-        , -0.5f, -0.5f, -0.5f, 0.0f, 1.0f
-        , 0.5f, -0.5f, -0.5f, 1.0f, 1.0f
-        , 0.5f, -0.5f, 0.5f, 1.0f, 0.0f
-        , -0.5f, -0.5f, 0.5f, 0.0f, 0.0f
+        , -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f
+        , 0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f
+        , 0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f
+        , -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f
 
-        , -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
-        , 0.5f, 0.5f, -0.5f, 1.0f, 1.0f
-        , 0.5f, 0.5f, 0.5f, 1.0f, 0.0f
-        , -0.5f, 0.5f, 0.5f, 0.0f, 0.0f
+        , -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f
+        , 0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f
+        , 0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f
+        , -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f
     };
 
     uint32_t indices[] = {
@@ -222,14 +256,17 @@ bool Context::_Init()
     _vertex_layout = VertexLayout::Create();
 
     // vertex buffer 생성 (position, normal, 등등이 들어가는 버퍼)
+    // 버텍스 데이터(8개) * 프리미티브 당 버텍스 수(4개) * 정육면체의 프리미티브 수(6개) = 192
     _vertex_buffer = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW
-                                            , vertices, sizeof(float) * 120);
+                                            , vertices, sizeof(float) * 8 * 6 * 4);
 
     // _vertex_layout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
     _vertex_layout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE
-                              , sizeof(float) * 5, 0);
+                              , sizeof(float) * 8, 0);
+    _vertex_layout->SetAttrib(1, 3, GL_FLOAT, GL_FALSE
+                              , sizeof(float) * 8, sizeof(float) * 3);
     _vertex_layout->SetAttrib(2, 2, GL_FLOAT, GL_FALSE
-                              , sizeof(float) * 5, sizeof(float) * 3);
+                              , sizeof(float) * 8, sizeof(float) * 6);
 
     // index buffer 생성 및 바인딩
     _index_buffer = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW

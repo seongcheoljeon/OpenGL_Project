@@ -3,6 +3,9 @@ message(STATUS "Configuring glm...")
 set(GLM_ENABLE_CXX_20 ON CACHE BOOL "Enable C++ 20 features" FORCE)
 set(GLM_BUILD_TESTS OFF CACHE BOOL "Build glm tests" FORCE)
 
+# glm 1.0.1의 cmake_minimum_required가 3.10 미만이라 발생하는 deprecation 경고 억제
+set(CMAKE_POLICY_VERSION_MINIMUM 3.10 CACHE STRING "" FORCE)
+
 FetchContent_Declare(
         glm
         GIT_REPOSITORY "https://github.com/g-truc/glm.git"
