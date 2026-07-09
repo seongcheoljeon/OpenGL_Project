@@ -37,12 +37,11 @@ private:
 
 private:
     ProgramUPtr _program{nullptr};
+    ProgramUPtr _simple_program{nullptr};
 
     VertexLayoutUPtr _vertex_layout{nullptr};
     BufferUPtr _vertex_buffer{nullptr};
     BufferUPtr _index_buffer{nullptr};
-    TextureUPtr _texture{nullptr};
-    TextureUPtr _texture2{nullptr};
 
     // clear color
     glm::vec4 _clear_color{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
@@ -78,9 +77,8 @@ private:
 private:
     struct Material
     {
-        glm::vec3 ambient{glm::vec3(1.0f, 0.5f, 0.3f)};
-        glm::vec3 diffuse{glm::vec3(1.0f, 0.5f, 0.3f)};
-        glm::vec3 specular{glm::vec3(0.5f, 0.5f, 0.5f)};
+        TextureUPtr diffuse;
+        TextureUPtr specular;
         float shininess{32.0f};
     };
     Material _material;

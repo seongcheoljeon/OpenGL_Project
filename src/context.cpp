@@ -46,9 +46,6 @@ void Context::Render()
 
         if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            ImGui::ColorEdit3("m.ambient", glm::value_ptr(_material.ambient));
-            ImGui::ColorEdit3("m.diffuse", glm::value_ptr(_material.diffuse));
-            ImGui::ColorEdit3("m.specular", glm::value_ptr(_material.specular));
             ImGui::DragFloat("m.shininess", &_material.shininess, 1.0f, 1.0f, 256.0f);
         }
 
@@ -80,12 +77,9 @@ void Context::Render()
 
     auto light_model_transform = glm::translate(glm::mat4(1.0), _light.position)
                                  * glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
-    _program->Use();
-    _program->SetUniform("light.position", _light.position);
-    _program->SetUniform("light.ambient", _light.diffuse);
-    _program->SetUniform("material.ambient", _light.diffuse);
-    _program->SetUniform("transform", projection * view * light_model_transform);
-    _program->SetUniform("model_transform", light_model_transform);
+    _simple_program->Use();
+    _simple_program->SetUniform("color", glm::vec4(_light.ambient + _light.diffuse, 1.0f));
+    _simple_program->SetUniform("transform", projection * view * light_model_transform);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
     _program->Use();
@@ -94,10 +88,14 @@ void Context::Render()
     _program->SetUniform("light.ambient", _light.ambient);
     _program->SetUniform("light.diffuse", _light.diffuse);
     _program->SetUniform("light.specular", _light.specular);
-    _program->SetUniform("material.ambient", _material.ambient);
-    _program->SetUniform("material.diffuse", _material.diffuse);
-    _program->SetUniform("material.specular", _material.specular);
+    _program->SetUniform("material.diffuse", 0);
+    _program->SetUniform("material.specular", 1);
     _program->SetUniform("material.shininess", _material.shininess);
+
+    glActiveTexture(GL_TEXTURE0);
+    _material.diffuse->Bind();
+    glActiveTexture(GL_TEXTURE1);
+    _material.specular->Bind();
 
     for (size_t i = 0; i < cube_positions.size(); ++i)
     {
@@ -272,49 +270,37 @@ bool Context::_Init()
     _index_buffer = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW
                                            , indices, sizeof(uint32_t) * 36);
 
-    ShaderSPtr vertex_shader   = Shader::CreateFromFile("../shader/lighting.vert", GL_VERTEX_SHADER);
-    ShaderSPtr fragment_shader = Shader::CreateFromFile("../shader/lighting.frag", GL_FRAGMENT_SHADER);
-    if (!vertex_shader || !fragment_shader)
+    _simple_program = Program::Create("../shader/simple.vert", "../shader/simple.frag");
+    if (!_simple_program)
     {
         return false;
     }
-    SPDLOG_INFO("vertex shader id: {}", vertex_shader->Get());
-    SPDLOG_INFO("fragment shader id: {}", fragment_shader->Get());
 
-    _program = Program::Create({fragment_shader, vertex_shader});
+    _program = Program::Create("../shader/lighting.vert", "../shader/lighting.frag");
     if (!_program)
     {
         return false;
     }
-    SPDLOG_INFO("program id: {}", _program->Get());
 
     glClearColor(0.0f, 0.1f, 0.2f, 0.0f); // color framebuffer 화면을 클리어
 
-    /////////////////
-    auto image = Image::Load("../image/container.jpg");
-    if (!image)
+    auto diffuse_image = Image::Load("../image/container2.png");
+    if (!diffuse_image)
     {
         return false;
     }
-    SPDLOG_INFO("image: {}x:{}, {} channels", image->GetWidth(), image->GetHeight(), image->GetChannelCount());
+    SPDLOG_INFO("diffuse image: {}x{}, {} channels"
+                , diffuse_image->GetWidth(), diffuse_image->GetHeight(), diffuse_image->GetChannelCount());
+    _material.diffuse = Texture::CreateFromImage(diffuse_image.get());
 
-    _texture = Texture::CreateFromImage(image.get());
-
-    auto image2 = Image::Load("../image/awesomeface.png");
-    if (!image2)
+    auto specular_image = Image::Load("../image/container2_specular.png");
+    if (!specular_image)
     {
         return false;
     }
-    _texture2 = Texture::CreateFromImage(image2.get());
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, _texture->Get());
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, _texture2->Get());
-
-    _program->Use();
-    _program->SetUniform("tex", 0);
-    _program->SetUniform("tex2", 1);
+    SPDLOG_INFO("specular image: {}x{}, {} channels"
+                , specular_image->GetWidth(), specular_image->GetHeight(), specular_image->GetChannelCount());
+    _material.specular = Texture::CreateFromImage(specular_image.get());
 
     return true;
 }
