@@ -25,4 +25,6 @@
 
 std::optional<std::string> LoadTextFile(const std::string& filename);
 
+glm::vec3 GetAttenuationCoefficients(float distance);
+
 #endif //OPENGL_PROJECT_COMMON_H
