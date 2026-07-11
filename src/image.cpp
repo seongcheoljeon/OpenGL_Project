@@ -28,6 +28,25 @@ ImageUPtr Image::Create( int width, int height, int channel_count )
     return image;
 }
 
+ImageUPtr Image::CreateSingleColor( int width, int height, const glm::vec4& color )
+{
+    glm::vec4 clamped = glm::clamp(color * 255.0f, 0.0f, 255.0f);
+    uint8_t rgba[4] = {
+        static_cast<uint8_t>(clamped.r)
+        , static_cast<uint8_t>(clamped.g)
+        , static_cast<uint8_t>(clamped.b)
+        , static_cast<uint8_t>(clamped.a)
+    };
+
+    auto image = Create(width, height, 4);
+    for (int i=0; i<width*height; ++i)
+    {
+        memcpy(image->_data + 4 * i, rgba, 4);
+    }
+
+    return image;
+}
+
 Image::~Image()
 {
     if (_data)

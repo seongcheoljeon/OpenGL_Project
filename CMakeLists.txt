@@ -35,6 +35,8 @@ add_executable(${PROJECT_NAME}
         src/texture.h
         src/mesh.h
         src/mesh.cpp
+        src/model.cpp
+        src/model.h
 )
 
 target_sources(${PROJECT_NAME}

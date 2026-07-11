@@ -5,6 +5,28 @@
 #include "Mesh.h"
 
 
+void Material::SetToProgram( const Program* program ) const
+{
+    int texture_count = 0;
+    if (nullptr != _diffuse)
+    {
+        glActiveTexture(GL_TEXTURE0 + texture_count);
+        program->SetUniform("material.diffuse", texture_count);
+        _diffuse->Bind();
+        texture_count++;
+    }
+    if (nullptr != _specular)
+    {
+        glActiveTexture(GL_TEXTURE0 + texture_count);
+        program->SetUniform("material.specular", texture_count);
+        _specular->Bind();
+        texture_count++;
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    program->SetUniform("material.shininess", _shininess);
+}
+
 MeshUPtr Mesh::Create( const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices
                        , uint32_t primitive_type )
 {
@@ -59,9 +81,13 @@ MeshUPtr Mesh::CreateBox()
     return Create(vertices, indices, GL_TRIANGLES);
 }
 
-void Mesh::Draw() const
+void Mesh::Draw(const Program* program) const
 {
     _vertex_layout->Bind();
+    if (_material)
+    {
+        _material->SetToProgram(program);
+    }
     glDrawElements(_primitive_type, _index_buffer->GetCount(), GL_UNSIGNED_INT, nullptr);
 }
 

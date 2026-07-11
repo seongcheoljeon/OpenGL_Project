@@ -38,13 +38,14 @@ void Context::Render()
 
         if (ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            ImGui::DragFloat3("L.Position", glm::value_ptr(_light.position), 0.01f);
-            ImGui::DragFloat3("L.Direction", glm::value_ptr(_light.direction), 0.01f);
-            ImGui::DragFloat2("L.Cutoff", glm::value_ptr(_light.cutoff), 0.5f, 0.0f, 90.0f);
-            ImGui::DragFloat("L.Distance", &_light.distance, 0.5f, 0.0f, 3000.0f);
-            ImGui::ColorEdit3("L.Ambient", glm::value_ptr(_light.ambient));
-            ImGui::ColorEdit3("L.Diffuse", glm::value_ptr(_light.diffuse));
-            ImGui::ColorEdit3("L.Specular", glm::value_ptr(_light.specular));
+            ImGui::DragFloat3("l.Position", glm::value_ptr(_light.position), 0.01f);
+            ImGui::DragFloat3("l.Direction", glm::value_ptr(_light.direction), 0.01f);
+            ImGui::DragFloat2("l.Cutoff", glm::value_ptr(_light.cutoff), 0.5f, 0.0f, 90.0f);
+            ImGui::DragFloat("l.Distance", &_light.distance, 0.5f, 0.0f, 3000.0f);
+            ImGui::ColorEdit3("l.Ambient", glm::value_ptr(_light.ambient));
+            ImGui::ColorEdit3("l.Diffuse", glm::value_ptr(_light.diffuse));
+            ImGui::ColorEdit3("l.Specular", glm::value_ptr(_light.specular));
+            ImGui::Checkbox("l.Flash Light", &_is_flash_light_mode);
         }
 
         if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
@@ -55,13 +56,6 @@ void Context::Render()
         ImGui::Checkbox("Animation", &_is_animation);
     }
     ImGui::End();
-
-    std::vector<glm::vec3> cube_positions = {
-        glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(2.0f, 5.0f, -15.0f), glm::vec3(-1.5f, -2.2f, -2.5f)
-        , glm::vec3(-3.8f, -2.0f, -12.3f), glm::vec3(2.4f, -0.4f, -3.5f), glm::vec3(-1.7f, 3.0f, -7.5f)
-        , glm::vec3(1.3f, -2.0f, -2.5f), glm::vec3(1.5f, 2.0f, -2.5f), glm::vec3(1.5f, 0.2f, -1.5f)
-        , glm::vec3(-1.3f, 1.0f, -1.5f)
-    };
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
@@ -78,17 +72,28 @@ void Context::Render()
                             , _camera_pos + _camera_front
                             , _camera_up);
 
-    auto light_model_transform = glm::translate(glm::mat4(1.0), _light.position)
-                                 * glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
-    _simple_program->Use();
-    _simple_program->SetUniform("color", glm::vec4(_light.ambient + _light.diffuse, 1.0f));
-    _simple_program->SetUniform("transform", projection * view * light_model_transform);
-    _box->Draw();
+    glm::vec3 light_pos = _light.position;
+    glm::vec3 light_dir = _light.direction;
+
+    if (_is_flash_light_mode)
+    {
+        light_pos = _camera_pos;
+        light_dir = _camera_front;
+    }
+    else
+    {
+        auto light_model_transform = glm::translate(glm::mat4(1.0), _light.position)
+                                     * glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
+        _simple_program->Use();
+        _simple_program->SetUniform("color", glm::vec4(_light.ambient + _light.diffuse, 1.0f));
+        _simple_program->SetUniform("transform", projection * view * light_model_transform);
+        _box->Draw(_simple_program.get());
+    }
 
     _program->Use();
     _program->SetUniform("view_pos", _camera_pos);
-    _program->SetUniform("light.position", _light.position);
-    _program->SetUniform("light.direction", _light.direction);
+    _program->SetUniform("light.position", light_pos);
+    _program->SetUniform("light.direction", light_dir);
     _program->SetUniform("light.cutoff"
                          , glm::vec2(cosf(glm::radians(_light.cutoff[0]))
                                      , cosf(glm::radians(_light.cutoff[0] + _light.cutoff[1]))));
@@ -96,6 +101,7 @@ void Context::Render()
     _program->SetUniform("light.ambient", _light.ambient);
     _program->SetUniform("light.diffuse", _light.diffuse);
     _program->SetUniform("light.specular", _light.specular);
+
     _program->SetUniform("material.diffuse", 0);
     _program->SetUniform("material.specular", 1);
     _program->SetUniform("material.shininess", _material.shininess);
@@ -105,24 +111,11 @@ void Context::Render()
     glActiveTexture(GL_TEXTURE1);
     _material.specular->Bind();
 
-    for (size_t i = 0; i < cube_positions.size(); ++i)
-    {
-        auto& pos  = cube_positions[i];
-        auto model = glm::translate(glm::mat4(1.0f), pos);
-        model      = glm::rotate(model
-                            , glm::radians(
-                                (_is_animation ? static_cast<float>(glfwGetTime()) : 0.0f) * 120.0f + 20.0f
-                                * static_cast<float>(i))
-                            , glm::vec3(1.0f, 0.5f, 0.0f));
-        auto transform = projection * view * model;
-
-        _program->SetUniform("transform", transform);
-        _program->SetUniform("model_transform", model);
-
-        _box->Draw();
-    }
-
-    _program->Use();
+    auto model_transform = glm::mat4(1.0f);
+    auto transform = projection * view * model_transform;
+    _program->SetUniform("transform", transform);
+    _program->SetUniform("model_transform", model_transform);
+    _model->Draw(_program.get());
 }
 
 void Context::ProcessInput( GLFWwindow* window )
@@ -216,6 +209,12 @@ bool Context::_Init()
 {
     _box = Mesh::CreateBox();
 
+    _model = Model::Load("../model/backpack.obj");
+    if (_model == nullptr)
+    {
+        return false;
+    }
+
     _simple_program = Program::Create("../shader/simple.vert", "../shader/simple.frag");
     if (!_simple_program)
     {
@@ -230,7 +229,8 @@ bool Context::_Init()
 
     glClearColor(0.0f, 0.1f, 0.2f, 0.0f); // color framebuffer 화면을 클리어
 
-    auto diffuse_image = Image::Load("../image/container2.png");
+    // auto diffuse_image = Image::Load("../image/container2.png");
+    auto diffuse_image = Image::CreateSingleColor(4, 4, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     if (!diffuse_image)
     {
         return false;
@@ -239,7 +239,8 @@ bool Context::_Init()
                 , diffuse_image->GetWidth(), diffuse_image->GetHeight(), diffuse_image->GetChannelCount());
     _material.diffuse = Texture::CreateFromImage(diffuse_image.get());
 
-    auto specular_image = Image::Load("../image/container2_specular.png");
+    // auto specular_image = Image::Load("../image/container2_specular.png");
+    auto specular_image = Image::CreateSingleColor(4, 4, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
     if (!specular_image)
     {
         return false;

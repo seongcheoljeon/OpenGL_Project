@@ -10,6 +10,7 @@
 #include "program.h"
 #include "buffer.h"
 #include "mesh.h"
+#include "model.h"
 #include "vertex_layout.h"
 #include "texture.h"
 
@@ -41,6 +42,7 @@ private:
     ProgramUPtr _simple_program{nullptr};
 
     MeshUPtr _box{nullptr};
+    ModelUPtr _model{nullptr};
 
     // clear color
     glm::vec4 _clear_color{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
@@ -89,6 +91,7 @@ private:
 
 private:
     bool _is_animation{true};
+    bool _is_flash_light_mode{false};
 };
 
 #endif // OPENGL_PROJECT_CONTEXT_H

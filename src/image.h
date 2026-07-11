@@ -14,6 +14,7 @@ class Image
 public:
     static ImageUPtr Load(const std::string& filepath);
     static ImageUPtr Create(int width, int height, int channel_count = 4);
+    static ImageUPtr CreateSingleColor(int width, int height, const glm::vec4& color);
     ~Image();
 
     const uint8_t* GetData() const { return _data; }

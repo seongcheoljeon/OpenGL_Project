@@ -7,7 +7,9 @@
 
 #include "common.h"
 #include "buffer.h"
+#include "texture.h"
 #include "vertex_layout.h"
+#include "program.h"
 
 
 struct Vertex
@@ -18,6 +20,28 @@ struct Vertex
 };
 
 CLASS_PTR(Mesh)
+CLASS_PTR(Material)
+
+
+class Material
+{
+public:
+    static MaterialUPtr Create()
+    {
+        return MaterialUPtr(new Material());
+    }
+
+public:
+    TextureSPtr _diffuse{nullptr};
+    TextureSPtr _specular{nullptr};
+    float _shininess{32.0f};
+
+    void SetToProgram(const Program* program) const;
+
+private:
+    Material() = default;
+};
+
 
 class Mesh
 {
@@ -42,7 +66,17 @@ public:
         return _index_buffer;
     }
 
-    void Draw() const;
+    void SetMaterial( MaterialSPtr material )
+    {
+        _material = material;
+    }
+
+    MaterialSPtr GetMaterial() const
+    {
+        return _material;
+    }
+
+    void Draw(const Program* program) const;
 
 private:
     Mesh() = default;
@@ -51,9 +85,10 @@ private:
 
 private:
     uint32_t _primitive_type{GL_TRIANGLES};
-    VertexLayoutUPtr _vertex_layout;
-    BufferSPtr _vertex_buffer;
-    BufferSPtr _index_buffer;
+    VertexLayoutUPtr _vertex_layout{nullptr};
+    BufferSPtr _vertex_buffer{nullptr};
+    BufferSPtr _index_buffer{nullptr};
+    MaterialSPtr _material{nullptr};
 };
 
 
