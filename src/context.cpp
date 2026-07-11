@@ -83,7 +83,7 @@ void Context::Render()
     _simple_program->Use();
     _simple_program->SetUniform("color", glm::vec4(_light.ambient + _light.diffuse, 1.0f));
     _simple_program->SetUniform("transform", projection * view * light_model_transform);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    _box->Draw();
 
     _program->Use();
     _program->SetUniform("view_pos", _camera_pos);
@@ -119,7 +119,7 @@ void Context::Render()
         _program->SetUniform("transform", transform);
         _program->SetUniform("model_transform", model);
 
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        _box->Draw();
     }
 
     _program->Use();
@@ -214,69 +214,7 @@ void Context::MouseButton( int button, int action, double x, double y )
 
 bool Context::_Init()
 {
-    // pos.xyz, normal.xyz, texcoord.uv
-    float vertices[] = {
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f
-        , 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f
-        , 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f
-        , -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f
-
-        , -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f
-        , 0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f
-        , 0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f
-        , -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f
-
-        , -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f
-        , -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f
-        , -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f
-        , -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f
-
-        , 0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f
-        , 0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f
-        , 0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f
-        , 0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f
-
-        , -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f
-        , 0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f
-        , 0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f
-        , -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f
-
-        , -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f
-        , 0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f
-        , 0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f
-        , -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f
-    };
-
-    uint32_t indices[] = {
-        0, 2, 1, 2, 0, 3
-        , 4, 5, 6, 6, 7, 4
-        , 8, 9, 10, 10, 11, 8
-        , 12, 14, 13, 14, 12, 15
-        , 16, 17, 18, 18, 19, 16
-        , 20, 22, 21, 22, 20, 23
-    };
-
-    // 순서 중요!
-    // VAO binding -> VBO binding -> vertex attribute 설정
-
-    _vertex_layout = VertexLayout::Create();
-
-    // vertex buffer 생성 (position, normal, 등등이 들어가는 버퍼)
-    // 버텍스 데이터(8개) * 프리미티브 당 버텍스 수(4개) * 정육면체의 프리미티브 수(6개) = 192
-    _vertex_buffer = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW
-                                            , vertices, sizeof(float) * 8 * 6 * 4);
-
-    // _vertex_layout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-    _vertex_layout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE
-                              , sizeof(float) * 8, 0);
-    _vertex_layout->SetAttrib(1, 3, GL_FLOAT, GL_FALSE
-                              , sizeof(float) * 8, sizeof(float) * 3);
-    _vertex_layout->SetAttrib(2, 2, GL_FLOAT, GL_FALSE
-                              , sizeof(float) * 8, sizeof(float) * 6);
-
-    // index buffer 생성 및 바인딩
-    _index_buffer = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW
-                                           , indices, sizeof(uint32_t) * 36);
+    _box = Mesh::CreateBox();
 
     _simple_program = Program::Create("../shader/simple.vert", "../shader/simple.frag");
     if (!_simple_program)

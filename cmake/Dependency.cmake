@@ -13,5 +13,6 @@ include(${DEP_CMAKE_DIR}/glad.cmake)
 include(${DEP_CMAKE_DIR}/stb_image.cmake)
 include(${DEP_CMAKE_DIR}/glm.cmake)
 include(${DEP_CMAKE_DIR}/imgui.cmake)
+include(${DEP_CMAKE_DIR}/assimp.cmake)
 
 message(STATUS "Total Dependencies: ${DEP_LIBS}")

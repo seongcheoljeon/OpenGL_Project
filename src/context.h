@@ -9,6 +9,7 @@
 #include "shader.h"
 #include "program.h"
 #include "buffer.h"
+#include "mesh.h"
 #include "vertex_layout.h"
 #include "texture.h"
 
@@ -39,9 +40,7 @@ private:
     ProgramUPtr _program{nullptr};
     ProgramUPtr _simple_program{nullptr};
 
-    VertexLayoutUPtr _vertex_layout{nullptr};
-    BufferUPtr _vertex_buffer{nullptr};
-    BufferUPtr _index_buffer{nullptr};
+    MeshUPtr _box{nullptr};
 
     // clear color
     glm::vec4 _clear_color{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
@@ -74,6 +73,7 @@ private:
         glm::vec3 diffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
         glm::vec3 specular{glm::vec3(1.0f, 1.0f, 1.0f)};
     };
+
     Light _light;
 
     // material parameter
@@ -84,6 +84,7 @@ private:
         TextureUPtr specular;
         float shininess{32.0f};
     };
+
     Material _material;
 
 private:

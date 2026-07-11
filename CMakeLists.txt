@@ -33,6 +33,8 @@ add_executable(${PROJECT_NAME}
         src/image.h
         src/texture.cpp
         src/texture.h
+        src/mesh.h
+        src/mesh.cpp
 )
 
 target_sources(${PROJECT_NAME}
@@ -58,17 +60,15 @@ target_compile_features(${PROJECT_NAME}
         cxx_std_20
 )
 
-# 빌드 타입별 설정
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_definitions(${PROJECT_NAME}
-            PRIVATE
-            DEBUG_BUILD
-            PUBLIC
-            WINDOW_NAME="${WINDOW_NAME} [Debug]"
-            WINDOW_WIDTH=${WINDOW_WIDTH}
-            WINDOW_HEIGHT=${WINDOW_HEIGHT}
-    )
-endif()
+# 빌드 타입별 설정 (멀티-config 생성기 지원을 위해 generator expression 사용)
+target_compile_definitions(${PROJECT_NAME}
+        PRIVATE
+        $<$<CONFIG:Debug>:DEBUG_BUILD>
+        PUBLIC
+        WINDOW_NAME="${WINDOW_NAME}$<$<CONFIG:Debug>: [Debug]>"
+        WINDOW_WIDTH=${WINDOW_WIDTH}
+        WINDOW_HEIGHT=${WINDOW_HEIGHT}
+)
 
 # 컴파일 경고 설정
 if(MSVC)
