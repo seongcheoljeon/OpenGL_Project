@@ -48,11 +48,6 @@ void Context::Render()
             ImGui::Checkbox("l.Flash Light", &_is_flash_light_mode);
         }
 
-        if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
-        {
-            ImGui::DragFloat("m.shininess", &_material.shininess, 1.0f, 1.0f, 256.0f);
-        }
-
         ImGui::Checkbox("Animation", &_is_animation);
     }
     ImGui::End();
@@ -102,20 +97,35 @@ void Context::Render()
     _program->SetUniform("light.diffuse", _light.diffuse);
     _program->SetUniform("light.specular", _light.specular);
 
-    _program->SetUniform("material.diffuse", 0);
-    _program->SetUniform("material.specular", 1);
-    _program->SetUniform("material.shininess", _material.shininess);
-
-    glActiveTexture(GL_TEXTURE0);
-    _material.diffuse->Bind();
-    glActiveTexture(GL_TEXTURE1);
-    _material.specular->Bind();
-
-    auto model_transform = glm::mat4(1.0f);
+    auto model_transform =
+        glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, 0.0f))
+        * glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f));
     auto transform = projection * view * model_transform;
+
     _program->SetUniform("transform", transform);
     _program->SetUniform("model_transform", model_transform);
-    _model->Draw(_program.get());
+    _plane_material->SetToProgram(_program.get());
+    _box->Draw(_program.get());
+
+    model_transform =
+        glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.75f, -4.0f))
+        * glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f))
+        * glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+    transform = projection * view * model_transform;
+    _program->SetUniform("transform", transform);
+    _program->SetUniform("model_transform", model_transform);
+    _box1_material->SetToProgram(_program.get());
+    _box->Draw(_program.get());
+
+    model_transform =
+        glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f))
+        * glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f))
+        * glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+    transform = projection * view * model_transform;
+    _program->SetUniform("transform", transform);
+    _program->SetUniform("model_transform", model_transform);
+    _box2_material->SetToProgram(_program.get());
+    _box->Draw(_program.get());
 }
 
 void Context::ProcessInput( GLFWwindow* window )
@@ -209,12 +219,6 @@ bool Context::_Init()
 {
     _box = Mesh::CreateBox();
 
-    _model = Model::Load("../model/backpack.obj");
-    if (_model == nullptr)
-    {
-        return false;
-    }
-
     _simple_program = Program::Create("../shader/simple.vert", "../shader/simple.frag");
     if (!_simple_program)
     {
@@ -229,25 +233,26 @@ bool Context::_Init()
 
     glClearColor(0.0f, 0.1f, 0.2f, 0.0f); // color framebuffer 화면을 클리어
 
-    // auto diffuse_image = Image::Load("../image/container2.png");
-    auto diffuse_image = Image::CreateSingleColor(4, 4, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    if (!diffuse_image)
-    {
-        return false;
-    }
-    SPDLOG_INFO("diffuse image: {}x{}, {} channels"
-                , diffuse_image->GetWidth(), diffuse_image->GetHeight(), diffuse_image->GetChannelCount());
-    _material.diffuse = Texture::CreateFromImage(diffuse_image.get());
+    TextureSPtr darkgray_texture = Texture::CreateFromImage(
+        Image::CreateSingleColor(4, 4, glm::vec4(0.2f, 0.2f, 0.2f, 1.0f)).get());
 
-    // auto specular_image = Image::Load("../image/container2_specular.png");
-    auto specular_image = Image::CreateSingleColor(4, 4, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
-    if (!specular_image)
-    {
-        return false;
-    }
-    SPDLOG_INFO("specular image: {}x{}, {} channels"
-                , specular_image->GetWidth(), specular_image->GetHeight(), specular_image->GetChannelCount());
-    _material.specular = Texture::CreateFromImage(specular_image.get());
+    TextureSPtr gray_texture = Texture::CreateFromImage(
+        Image::CreateSingleColor(4, 4, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)).get());
+
+    _plane_material             = Material::Create();
+    _plane_material->_diffuse   = Texture::CreateFromImage(Image::Load("../image/marble.jpg").get());
+    _plane_material->_specular  = gray_texture;
+    _plane_material->_shininess = 128.0f;
+
+    _box1_material             = Material::Create();
+    _box1_material->_diffuse   = Texture::CreateFromImage(Image::Load("../image/container.jpg").get());
+    _box1_material->_specular  = darkgray_texture;
+    _box1_material->_shininess = 16.0f;
+
+    _box2_material             = Material::Create();
+    _box2_material->_diffuse   = Texture::CreateFromImage(Image::Load("../image/container2.png").get());
+    _box2_material->_specular  = Texture::CreateFromImage(Image::Load("../image/container2_specular.png").get());
+    _box2_material->_shininess = 64.0f;
 
     return true;
 }

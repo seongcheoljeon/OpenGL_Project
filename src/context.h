@@ -42,7 +42,6 @@ private:
     ProgramUPtr _simple_program{nullptr};
 
     MeshUPtr _box{nullptr};
-    ModelUPtr _model{nullptr};
 
     // clear color
     glm::vec4 _clear_color{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
@@ -53,13 +52,13 @@ private:
 
     // camera parameter
 private:
-    glm::vec3 _camera_pos{glm::vec3(0.0f, 0.0f, 3.0f)};
+    glm::vec3 _camera_pos{glm::vec3(0.0f, 2.5f, 8.0f)};
     glm::vec3 _camera_front{glm::vec3(0.0f, 0.0f, -1.0f)};
     glm::vec3 _camera_up{glm::vec3(0.0f, 1.0f, 0.0f)};
     glm::vec2 _prev_mouse_pos{glm::vec2(0.0f)};
 
     float _camera_speed{0.05f};
-    float _camera_pitch{0.0f};
+    float _camera_pitch{-20.0f};
     float _camera_yaw{0.0f};
     bool _is_camera_control{false};
 
@@ -67,12 +66,12 @@ private:
 private:
     struct Light
     {
-        glm::vec3 position{glm::vec3(2.0f, 2.0f, 2.0f)};
+        glm::vec3 position{glm::vec3(1.0f, 4.0f, 4.0f)};
         glm::vec3 direction{glm::vec3(-1.0f, -1.0f, -1.0f)};
-        glm::vec2 cutoff{glm::vec2(20.0f, 5.0f)};
-        float distance{32.0f};
+        glm::vec2 cutoff{glm::vec2(120.0f, 5.0f)};
+        float distance{128.0f};
         glm::vec3 ambient{glm::vec3(0.1f, 0.1f, 0.1f)};
-        glm::vec3 diffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
+        glm::vec3 diffuse{glm::vec3(0.8f, 0.8f, 0.8f)};
         glm::vec3 specular{glm::vec3(1.0f, 1.0f, 1.0f)};
     };
 
@@ -80,14 +79,9 @@ private:
 
     // material parameter
 private:
-    struct Material
-    {
-        TextureUPtr diffuse;
-        TextureUPtr specular;
-        float shininess{32.0f};
-    };
-
-    Material _material;
+    MaterialSPtr _plane_material;
+    MaterialSPtr _box1_material;
+    MaterialSPtr _box2_material;
 
 private:
     bool _is_animation{true};
