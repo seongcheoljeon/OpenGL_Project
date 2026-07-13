@@ -50,6 +50,7 @@ public:
                             , uint32_t primitive_type );
 
     static MeshUPtr CreateBox();
+    static MeshUPtr CreatePlane();
 
     [[nodiscard]] const VertexLayout* GetVertexLayout() const
     {

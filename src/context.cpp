@@ -6,6 +6,8 @@
 #include "image.h"
 #include "imgui.h"
 
+#include <complex>
+
 ContextUPtr Context::Create()
 {
     ContextUPtr context = ContextUPtr(new Context());
@@ -52,7 +54,7 @@ void Context::Render()
     }
     ImGui::End();
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
     _camera_front =
@@ -60,8 +62,10 @@ void Context::Render()
         * glm::rotate(glm::mat4(1.0f), glm::radians(_camera_pitch), glm::vec3(1.0f, 0.0f, 0.0f))
         * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f); // 방향 vector일 경우 w값에 0.0을 입력해야 하는 필요가 있을 수 있다.
 
+    // auto projection = glm::perspective(glm::radians(45.0f)
+    //     , static_cast<float>(_width) / static_cast<float>(_height), 0.01f, 100.f);
     auto projection = glm::perspective(glm::radians(45.0f)
-                                       , static_cast<float>(_width) / static_cast<float>(_height), 0.01f, 100.f);
+                                       , static_cast<float>(_width) / static_cast<float>(_height), 0.1f, 30.f);
 
     auto view = glm::lookAt(_camera_pos
                             , _camera_pos + _camera_front
@@ -117,6 +121,7 @@ void Context::Render()
     _box1_material->SetToProgram(_program.get());
     _box->Draw(_program.get());
 
+    /*
     model_transform =
         glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f))
         * glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f))
@@ -126,6 +131,42 @@ void Context::Render()
     _program->SetUniform("model_transform", model_transform);
     _box2_material->SetToProgram(_program.get());
     _box->Draw(_program.get());
+*/
+
+    model_transform =
+        glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f))
+        * glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f))
+        * glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+    transform = projection * view * model_transform;
+    _program->SetUniform("transform", transform);
+    _program->SetUniform("model_transform", model_transform);
+    _box2_material->SetToProgram(_program.get());
+    _box->Draw(_program.get());
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    _texture_program->Use();
+    _window_texture->Bind();
+    _texture_program->SetUniform("tex", 0);
+
+    model_transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, 4.0f));
+    transform = projection * view * model_transform;
+    _texture_program->SetUniform("transform", transform);
+    _plane->Draw(_texture_program.get());
+
+    model_transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.2f, 0.5f, 5.0f));
+    transform = projection * view * model_transform;
+    _texture_program->SetUniform("transform", transform);
+    _plane->Draw(_texture_program.get());
+
+    model_transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.4f, 0.5f, 6.0f));
+    transform = projection * view * model_transform;
+    _texture_program->SetUniform("transform", transform);
+    _plane->Draw(_texture_program.get());
 }
 
 void Context::ProcessInput( GLFWwindow* window )
@@ -231,6 +272,12 @@ bool Context::_Init()
         return false;
     }
 
+    _texture_program = Program::Create("../shader/texture.vert", "../shader/texture.frag");
+    if (!_texture_program)
+    {
+        return false;
+    }
+
     glClearColor(0.0f, 0.1f, 0.2f, 0.0f); // color framebuffer 화면을 클리어
 
     TextureSPtr darkgray_texture = Texture::CreateFromImage(
@@ -253,6 +300,10 @@ bool Context::_Init()
     _box2_material->_diffuse   = Texture::CreateFromImage(Image::Load("../image/container2.png").get());
     _box2_material->_specular  = Texture::CreateFromImage(Image::Load("../image/container2_specular.png").get());
     _box2_material->_shininess = 64.0f;
+
+    _plane = Mesh::CreatePlane();
+    _window_texture = Texture::CreateFromImage(
+        Image::Load("../image/blending_transparent_window.png").get());
 
     return true;
 }

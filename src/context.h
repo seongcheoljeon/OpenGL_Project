@@ -40,8 +40,10 @@ private:
 private:
     ProgramUPtr _program{nullptr};
     ProgramUPtr _simple_program{nullptr};
+    ProgramUPtr _texture_program{nullptr};
 
     MeshUPtr _box{nullptr};
+    MeshUPtr _plane{nullptr};
 
     // clear color
     glm::vec4 _clear_color{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
@@ -82,6 +84,7 @@ private:
     MaterialSPtr _plane_material;
     MaterialSPtr _box1_material;
     MaterialSPtr _box2_material;
+    TextureSPtr _window_texture;
 
 private:
     bool _is_animation{true};
