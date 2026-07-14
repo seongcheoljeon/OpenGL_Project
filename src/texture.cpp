@@ -5,11 +5,29 @@
 #include "texture.h"
 
 
+TextureUPtr Texture::Create( uint32_t width, uint32_t height, uint32_t format )
+{
+    auto texture = TextureUPtr(new Texture());
+    texture->_CreateTexture();
+    texture->_SetTextureFormat(width, height, format);
+    texture->SetFilter(GL_LINEAR, GL_LINEAR);
+    return texture;
+}
+
 TextureUPtr Texture::CreateFromImage( const Image* image )
 {
     auto texture = TextureUPtr(new Texture());
     texture->_CreateTexture();
     texture->_SetTextureFromImage(image);
+    return texture;
+}
+
+TextureUPtr Texture::CreateFromImage( uint32_t width, uint32_t height, uint32_t format )
+{
+    auto texture = TextureUPtr(new Texture());
+    texture->_CreateTexture();
+    texture->_SetTextureFormat(width, height, format);
+    texture->SetFilter(GL_LINEAR, GL_LINEAR);
     return texture;
 }
 
@@ -64,8 +82,23 @@ void Texture::_SetTextureFromImage( const Image* image )
         break;
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->GetWidth(), image->GetHeight()
-        , 0, format, GL_UNSIGNED_BYTE, image->GetData());
+    _width  = image->GetWidth();
+    _height = image->GetHeight();
+    _format = format;
+
+    glTexImage2D(GL_TEXTURE_2D, 0, _format, _width, _height
+                 , 0, format, GL_UNSIGNED_BYTE, image->GetData());
 
     glGenerateMipmap(GL_TEXTURE_2D);
+}
+
+void Texture::_SetTextureFormat( uint32_t width, uint32_t height, uint32_t format )
+{
+    _width  = width;
+    _height = height;
+    _format = format;
+
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, _format, _width, _height
+        , 0, _format, GL_UNSIGNED_BYTE, nullptr);
 }

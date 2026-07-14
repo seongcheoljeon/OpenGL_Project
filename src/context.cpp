@@ -26,6 +26,7 @@ void Context::Render()
         {
             glClearColor(_clear_color.x, _clear_color.y, _clear_color.z, _clear_color.w);
         }
+        ImGui::DragFloat("Gamma", &_gamma, 0.01f, 0.0f, 2.2f);
         ImGui::Separator();
         ImGui::DragFloat3("Camera Position", glm::value_ptr(_camera_pos), 0.01f);
         ImGui::DragFloat("Camera Yaw", &_camera_yaw, 0.5f);
@@ -51,9 +52,14 @@ void Context::Render()
         }
 
         ImGui::Checkbox("Animation", &_is_animation);
+
+        float aspect_ratio = static_cast<float>(_width) / static_cast<float>(_height);
+        ImGui::Image(static_cast<ImTextureID>(_framebuffer->GetColorAttachment()->Get()), ImVec2(150 * aspect_ratio, 150),
+            ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
     }
     ImGui::End();
 
+    _framebuffer->Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
@@ -167,6 +173,19 @@ void Context::Render()
     transform = projection * view * model_transform;
     _texture_program->SetUniform("transform", transform);
     _plane->Draw(_texture_program.get());
+
+    //
+    Framebuffer::BindToDefault();
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    _post_program->Use();
+    _post_program->SetUniform("transform",
+        glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
+    _framebuffer->GetColorAttachment()->Bind();
+    _post_program->SetUniform("tex", 0);
+    _post_program->SetUniform("gamma", _gamma);
+    _plane->Draw(_post_program.get());
 }
 
 void Context::ProcessInput( GLFWwindow* window )
@@ -211,6 +230,8 @@ void Context::Reshape( int width, int height )
     _width  = width;
     _height = height;
     glViewport(0, 0, _width, _height); // opengl이 그림을 그릴 화면의 위치 및 크기 설정
+
+    _framebuffer = Framebuffer::Create(Texture::Create(_width, _height, GL_RGBA));
 }
 
 void Context::MouseMove( double x, double y )
@@ -274,6 +295,12 @@ bool Context::_Init()
 
     _texture_program = Program::Create("../shader/texture.vert", "../shader/texture.frag");
     if (!_texture_program)
+    {
+        return false;
+    }
+
+    _post_program = Program::Create("../shader/texture.vert", "../shader/gamma.frag");
+    if (!_post_program)
     {
         return false;
     }

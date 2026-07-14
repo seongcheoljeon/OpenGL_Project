@@ -9,6 +9,7 @@
 #include "shader.h"
 #include "program.h"
 #include "buffer.h"
+#include "framebuffer.h"
 #include "mesh.h"
 #include "model.h"
 #include "vertex_layout.h"
@@ -41,6 +42,7 @@ private:
     ProgramUPtr _program{nullptr};
     ProgramUPtr _simple_program{nullptr};
     ProgramUPtr _texture_program{nullptr};
+    ProgramUPtr _post_program{nullptr};
 
     MeshUPtr _box{nullptr};
     MeshUPtr _plane{nullptr};
@@ -89,6 +91,12 @@ private:
 private:
     bool _is_animation{true};
     bool _is_flash_light_mode{false};
+
+private:
+    FramebufferUPtr _framebuffer{nullptr};
+
+private:
+    float _gamma{1.0f};
 };
 
 #endif // OPENGL_PROJECT_CONTEXT_H
