@@ -7,6 +7,7 @@
 #include "imgui.h"
 
 #include <complex>
+#include <glm/gtx/projection.hpp>
 
 ContextUPtr Context::Create()
 {
@@ -54,8 +55,9 @@ void Context::Render()
         ImGui::Checkbox("Animation", &_is_animation);
 
         float aspect_ratio = static_cast<float>(_width) / static_cast<float>(_height);
-        ImGui::Image(static_cast<ImTextureID>(_framebuffer->GetColorAttachment()->Get()), ImVec2(150 * aspect_ratio, 150),
-            ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+        ImGui::Image(static_cast<ImTextureID>(_framebuffer->GetColorAttachment()->Get())
+                     , ImVec2(150 * aspect_ratio, 150),
+                     ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
     }
     ImGui::End();
 
@@ -71,15 +73,23 @@ void Context::Render()
     // auto projection = glm::perspective(glm::radians(45.0f)
     //     , static_cast<float>(_width) / static_cast<float>(_height), 0.01f, 100.f);
     auto projection = glm::perspective(glm::radians(45.0f)
-                                       , static_cast<float>(_width) / static_cast<float>(_height), 0.1f, 30.f);
+                                       , static_cast<float>(_width) / static_cast<float>(_height), 0.1f, 100.f);
 
     auto view = glm::lookAt(_camera_pos
                             , _camera_pos + _camera_front
                             , _camera_up);
 
+    auto skybox_model_transform =
+        glm::translate(glm::mat4(1.0), _camera_pos)
+        * glm::scale(glm::mat4(1.0), glm::vec3(50.0f));
+    _skybox_program->Use();
+    _cube_texture->Bind();
+    _skybox_program->SetUniform("skybox", 0);
+    _skybox_program->SetUniform("transform", projection * view * skybox_model_transform);
+    _box->Draw(_skybox_program.get());
+
     glm::vec3 light_pos = _light.position;
     glm::vec3 light_dir = _light.direction;
-
     if (_is_flash_light_mode)
     {
         light_pos = _camera_pos;
@@ -149,28 +159,38 @@ void Context::Render()
     _box2_material->SetToProgram(_program.get());
     _box->Draw(_program.get());
 
+    model_transform =
+        glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.75f, -2.0f))
+        * glm::rotate(glm::mat4(1.0f), glm::radians(40.0f), glm::vec3(0.0f, 1.0f, 0.0f))
+        * glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+    _envmap_program->Use();
+    _envmap_program->SetUniform("model", model_transform);
+    _envmap_program->SetUniform("view", view);
+    _envmap_program->SetUniform("projection", projection);
+    _envmap_program->SetUniform("camera_pos", _camera_pos);
+    _cube_texture->Bind();
+    _envmap_program->SetUniform("skybox", 0);
+    _box->Draw(_envmap_program.get());
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
 
     _texture_program->Use();
     _window_texture->Bind();
     _texture_program->SetUniform("tex", 0);
 
     model_transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, 4.0f));
-    transform = projection * view * model_transform;
+    transform       = projection * view * model_transform;
     _texture_program->SetUniform("transform", transform);
     _plane->Draw(_texture_program.get());
 
     model_transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.2f, 0.5f, 5.0f));
-    transform = projection * view * model_transform;
+    transform       = projection * view * model_transform;
     _texture_program->SetUniform("transform", transform);
     _plane->Draw(_texture_program.get());
 
     model_transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.4f, 0.5f, 6.0f));
-    transform = projection * view * model_transform;
+    transform       = projection * view * model_transform;
     _texture_program->SetUniform("transform", transform);
     _plane->Draw(_texture_program.get());
 
@@ -181,7 +201,7 @@ void Context::Render()
 
     _post_program->Use();
     _post_program->SetUniform("transform",
-        glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
+                              glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
     _framebuffer->GetColorAttachment()->Bind();
     _post_program->SetUniform("tex", 0);
     _post_program->SetUniform("gamma", _gamma);
@@ -328,9 +348,22 @@ bool Context::_Init()
     _box2_material->_specular  = Texture::CreateFromImage(Image::Load("../image/container2_specular.png").get());
     _box2_material->_shininess = 64.0f;
 
-    _plane = Mesh::CreatePlane();
+    _plane          = Mesh::CreatePlane();
     _window_texture = Texture::CreateFromImage(
         Image::Load("../image/blending_transparent_window.png").get());
+
+    const auto cube_right  = Image::Load("../image/skybox/right.jpg", false);
+    const auto cube_left   = Image::Load("../image/skybox/left.jpg", false);
+    const auto cube_top    = Image::Load("../image/skybox/top.jpg", false);
+    const auto cube_bottom = Image::Load("../image/skybox/bottom.jpg", false);
+    const auto cube_front  = Image::Load("../image/skybox/front.jpg", false);
+    const auto cube_back   = Image::Load("../image/skybox/back.jpg", false);
+
+    _cube_texture = CubeTexture::CreateFromImages(
+        {cube_right.get(), cube_left.get(), cube_top.get(), cube_bottom.get(), cube_front.get(), cube_back.get()});
+    _skybox_program = Program::Create("../shader/skybox.vert", "../shader/skybox.frag");
+
+    _envmap_program = Program::Create("../shader/envmap.vert", "../shader/envmap.frag");
 
     return true;
 }

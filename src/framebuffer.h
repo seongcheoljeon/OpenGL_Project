@@ -18,7 +18,7 @@ public:
 
     ~Framebuffer();
 
-    const uint32_t Get() const
+    uint32_t Get() const
     {
         return _framebuffer;
     };

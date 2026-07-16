@@ -97,6 +97,12 @@ private:
 
 private:
     float _gamma{1.0f};
+
+    // cube map
+private:
+    CubeTextureUPtr _cube_texture{nullptr};
+    ProgramUPtr _skybox_program{nullptr};
+    ProgramUPtr _envmap_program{nullptr};
 };
 
 #endif // OPENGL_PROJECT_CONTEXT_H

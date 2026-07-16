@@ -69,6 +69,7 @@ target_compile_definitions(${PROJECT_NAME}
         PRIVATE
         $<$<CONFIG:Debug>:DEBUG_BUILD>
         PUBLIC
+        GLM_ENABLE_EXPERIMENTAL
         WINDOW_NAME="${WINDOW_NAME}$<$<CONFIG:Debug>: [Debug]>"
         WINDOW_WIDTH=${WINDOW_WIDTH}
         WINDOW_HEIGHT=${WINDOW_HEIGHT}

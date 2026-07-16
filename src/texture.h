@@ -63,4 +63,21 @@ private:
 };
 
 
+CLASS_PTR(CubeTexture)
+
+class CubeTexture
+{
+public:
+    static CubeTextureUPtr CreateFromImages(const std::vector<Image*>& images);
+    ~CubeTexture();
+
+    uint32_t Get() const {return _texture;}
+    void Bind() const;
+
+private:
+    CubeTexture() = default;
+    bool _InitFromImages(const std::vector<Image*>& images);
+    uint32_t _texture{0};
+};
+
 #endif //OPENGL_PROJECT_TEXTURE_H
