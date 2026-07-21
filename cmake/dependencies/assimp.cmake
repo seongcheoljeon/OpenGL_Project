@@ -5,7 +5,15 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared library" FORCE)
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "Build assimp tests" FORCE)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "Build assimp tools" FORCE)
 set(ASSIMP_INSTALL OFF CACHE BOOL "Install assimp" FORCE)
-set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "Build zlib" FORCE)
+# zlib 선택:
+#  - macOS: 번들 zlib(구버전)의 zutil.h가 TARGET_OS_MAC 감지 후 fdopen 매크로를 NULL로 정의해
+#           최신 clang의 <stdio.h> fdopen 선언과 충돌 -> 빌드 실패. macOS SDK의 시스템 zlib 사용.
+#  - Windows/기타: 시스템 zlib을 보장할 수 없고 번들 zlib 버그도 안 터지므로 번들 zlib 사용.
+if(APPLE)
+    set(ASSIMP_BUILD_ZLIB OFF CACHE BOOL "Build zlib" FORCE)
+else()
+    set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "Build zlib" FORCE)
+endif()
 set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE BOOL "Inject debug postfix" FORCE)
 set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "Treat warnings as errors" FORCE)
 

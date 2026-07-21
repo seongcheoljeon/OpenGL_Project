@@ -78,9 +78,14 @@ int main()
         return -1;
     }
 
+    // macOS는 OpenGL 4.1까지만 지원하므로 크로스플랫폼(맥/윈도우) 공통 4.1 Core Profile 사용.
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __APPLE__
+    // macOS Core Profile은 forward-compatible 컨텍스트가 필수.
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+#endif
     glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); // 창이 뜨는 모니터 배율에 맞춰 창 크기 자동 조절
 
     // glfw 윈도우 생성, 실패하면 에러 출력 후 종료.
@@ -123,12 +128,24 @@ int main()
     float yscale = 1.0f;
     glfwGetWindowContentScale(window, &xscale, &yscale);
     auto& io = ImGui::GetIO();
+
+    // DPI 스케일 처리는 플랫폼마다 다르다:
+    //  - macOS(Retina): 창은 논리 좌표(point), 프레임버퍼는 실제 픽셀이라 ImGui 백엔드가
+    //    io.DisplayFramebufferScale로 이미 배율을 적용한다. 폰트는 선명도를 위해 고해상도로
+    //    래스터라이즈하되 FontGlobalScale로 논리 크기(16pt)로 되돌린다. 스타일 크기는
+    //    논리 단위이므로 ScaleAllSizes를 적용하지 않는다. (적용 시 폰트가 2배로 커짐)
+    //  - Windows/기타: GLFW_SCALE_TO_MONITOR로 창이 픽셀 단위로 커지고 DisplayFramebufferScale=1
+    //    이므로 폰트와 스타일 모두 배율만큼 키운다.
     io.Fonts->AddFontFromFileTTF(
         "../fonts/NanumSquareNeo-Variable.ttf"
         , 16.0f * xscale
         , nullptr
         , io.Fonts->GetGlyphRangesKorean());
+#ifdef __APPLE__
+    io.FontGlobalScale = 1.0f / xscale;
+#else
     ImGui::GetStyle().ScaleAllSizes(xscale);
+#endif
 
     ImGui_ImplGlfw_InitForOpenGL(window, false);
     ImGui_ImplOpenGL3_Init();
